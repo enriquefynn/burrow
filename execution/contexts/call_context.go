@@ -3,6 +3,8 @@ package contexts
 import (
 	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/hyperledger/burrow/crypto"
@@ -127,6 +129,11 @@ func (ctx *CallContext) Check(inAcc *acm.Account, value uint64) error {
 }
 
 func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error {
+	shardID, err := strconv.ParseUint(strings.Split(ctx.Tip.ChainID(), "-")[0], 10, 64)
+	if err != nil {
+		return err
+	}
+
 	createContract := ctx.tx.Address == nil
 	// VM call variables
 	var (
@@ -140,6 +147,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 			BlockHeight: ctx.Blockchain.LastBlockHeight() + 1,
 			BlockTime:   ctx.Blockchain.LastBlockTime().Unix(),
 			GasLimit:    GasLimit,
+			ShardID:     shardID,
 		}
 	)
 	moveOp := []byte{0, 0, 0, 0}
@@ -162,6 +170,8 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	} else if isMove2 {
 		contractNonce = corebin.LittleEndian.Uint64(ctx.tx.Data[4:12])
 
+		txCache.CreateAccount(callee)
+		ctx.Logger.TraceMsg("Executing MOVE2", "contract_address", callee, "init_code", code)
 		// TODO: Check sizes and return error if not correct
 		data = make([][]byte, 4)
 		//4 for move operation + 8 for contract nonce

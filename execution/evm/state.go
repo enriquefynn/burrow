@@ -32,6 +32,7 @@ type Reader interface {
 	Exists(address crypto.Address) bool
 	// GetBlockHash returns	hash of the specific block
 	GetBlockHash(blockNumber uint64) (binary.Word256, error)
+	GetShardID(address crypto.Address) uint64
 }
 
 type Writer interface {
@@ -162,7 +163,7 @@ func (st *State) GetSequence(address crypto.Address) uint64 {
 	return acc.Sequence
 }
 
-func (st *State) GetShard(address crypto.Address) uint64 {
+func (st *State) GetShardID(address crypto.Address) uint64 {
 	acc := st.account(address)
 	if acc == nil {
 		return 0

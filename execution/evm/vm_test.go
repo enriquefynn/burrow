@@ -1192,7 +1192,26 @@ func TestMove(t *testing.T) {
 	var gas uint64 = 100000
 
 	ourVm.Call(cache, NewNoopEventSink(), account1, account2, callcode, []byte{}, 0, &gas)
-	assert.Equal(t, uint64(2), cache.GetShard(account2))
+	assert.Equal(t, uint64(2), cache.GetShardID(account2))
+}
+
+func TestMove2(t *testing.T) {
+	st := newAppState()
+	cache := NewState(st, blockHashGetter)
+	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+
+	accountName := "account2addresstests"
+
+	callcode := MustSplice(PUSH32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, MOVE)
+
+	// Create accounts
+	account1 := newAccount(cache, "1")
+	account2 := makeAccountWithCode(cache, accountName, callcode)
+
+	var gas uint64 = 100000
+
+	ourVm.Call(cache, NewNoopEventSink(), account1, account2, callcode, []byte{}, 0, &gas)
+	assert.Equal(t, uint64(2), cache.GetShardID(account2))
 }
 
 // These code segment helpers exercise the MSTORE MLOAD MSTORE cycle to test

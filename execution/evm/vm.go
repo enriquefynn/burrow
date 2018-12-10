@@ -49,6 +49,7 @@ type Params struct {
 	CallStackMaxDepth        uint64
 	DataStackInitialCapacity uint64
 	DataStackMaxDepth        uint64
+	ShardID                  uint64
 }
 
 type VM struct {
@@ -143,6 +144,10 @@ func (vm *VM) fireCallEvent(eventSink EventSink, callType exec.CallType, errProv
 func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee crypto.Address, code,
 	input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
 
+	if callState.GetShardID(callee) != vm.params.ShardID {
+		return nil, errors.ErrorCodeExecutionReverted
+	}
+
 	// Always return output - we may have a reverted exception for which the return is meaningful
 	output, err = vm.call(callState, eventSink, caller, callee, code, input, value, gas, exec.CallTypeCall)
 	if err == nil {
@@ -167,7 +172,7 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller, callee cry
 		useGasNegative(gas, GasStorageUpdate, callState)
 	}
 
-	// callState.SetShard(callee, bcmevm.ChainConfig().ShardID)
+	callState.SetShard(callee, vm.params.ShardID)
 	// ret := vm.execute(callState, eventSink, caller, callee, code, input, value, gas)
 
 	return nil, nil
