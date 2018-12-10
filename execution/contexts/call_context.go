@@ -2,8 +2,12 @@ package contexts
 
 import (
 	"fmt"
+	"reflect"
 
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/hyperledger/burrow/crypto"
+
+	corebin "encoding/binary"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/acm/acmstate"
@@ -138,6 +142,13 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 			GasLimit:    GasLimit,
 		}
 	)
+	moveOp := []byte{0, 0, 0, 0}
+	var contractNonce uint64
+	var isMove2 bool
+	var data [][]byte
+	if len(ctx.tx.Data) >= 4 {
+		isMove2 = reflect.DeepEqual(ctx.tx.Data[0:4], moveOp)
+	}
 
 	// get or create callee
 	if createContract {
@@ -148,6 +159,22 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 		ctx.Logger.TraceMsg("Creating new contract",
 			"contract_address", callee,
 			"init_code", code)
+	} else if isMove2 {
+		contractNonce = corebin.LittleEndian.Uint64(ctx.tx.Data[4:12])
+
+		// TODO: Check sizes and return error if not correct
+		data = make([][]byte, 4)
+		//4 for move operation + 8 for contract nonce
+		var bStart uint32 = 12
+		for i := 0; i < 4; i++ {
+			if bStart+4 >= uint32(len(ctx.tx.Data)) {
+				return vm.ErrOutOfGas
+			}
+			dLen := corebin.LittleEndian.Uint32(ctx.tx.Data[bStart : bStart+4])
+			data[i] = ctx.tx.Data[bStart+4 : bStart+4+dLen]
+			bStart = bStart + dLen + 4
+		}
+
 	} else {
 		if outAcc == nil || len(outAcc.Code) == 0 {
 			// if you call an account that doesn't exist
@@ -187,7 +214,14 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	txHash := ctx.txe.Envelope.Tx.Hash()
 	logger := ctx.Logger.With(structure.TxHashKey, txHash)
 	vmach := evm.NewVM(params, caller, txHash, logger, ctx.VMOptions...)
-	ret, exception := vmach.Call(txCache, ctx.txe, caller, callee, code, ctx.tx.Data, value, &gas)
+	// var ret []byte
+	var exception errors.CodedError
+
+	if isMove2 {
+		ret, exception = vmach.Move2(txCache, ctx.txe, caller, callee, data[0], data[1], data[2], data[3], value, &gas, contractNonce)
+	} else {
+		ret, exception = vmach.Call(txCache, ctx.txe, caller, callee, code, ctx.tx.Data, value, &gas)
+	}
 	if exception != nil {
 		// Failure. Charge the gas fee. The 'value' was otherwise not transferred.
 		ctx.Logger.InfoMsg("Error on execution",

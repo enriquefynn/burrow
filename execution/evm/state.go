@@ -45,6 +45,7 @@ type Writer interface {
 	UnsetPermission(address crypto.Address, permFlag permission.PermFlag)
 	AddRole(address crypto.Address, role string) bool
 	RemoveRole(address crypto.Address, role string) bool
+	SetShard(address crypto.Address, shardID uint64)
 }
 
 type State struct {
@@ -58,6 +59,7 @@ type State struct {
 	error errors.CodedError
 	// In order for nested cache to inherit any options
 	cacheOptions []acmstate.CacheOption
+	shardID      uint64
 }
 
 func NewState(st acmstate.ReaderWriter, blockHashGetter func(height uint64) []byte, cacheOptions ...acmstate.CacheOption) *State {
@@ -158,6 +160,14 @@ func (st *State) GetSequence(address crypto.Address) uint64 {
 		return 0
 	}
 	return acc.Sequence
+}
+
+func (st *State) GetShard(address crypto.Address) uint64 {
+	acc := st.account(address)
+	if acc == nil {
+		return 0
+	}
+	return acc.ShardID
 }
 
 // Writer
@@ -265,6 +275,12 @@ func (st *State) GetBlockHash(height uint64) (binary.Word256, error) {
 		st.PushError(fmt.Errorf("got empty BlockHash from blockHashGetter"))
 	}
 	return binary.LeftPadWord256(hash), nil
+}
+
+func (st *State) SetShard(address crypto.Address, shardID uint64) {
+	acc := st.mustAccount(address)
+	acc.ShardID = shardID
+	st.updateAccount(acc)
 }
 
 // Helpers

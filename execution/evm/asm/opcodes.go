@@ -185,10 +185,12 @@ const (
 	CALLCODE
 	RETURN
 	DELEGATECALL
+	CREATE2
+	MOVE // 0xf6
+	COPY // 0xf7
 
 	// 0x70 range - other
 	STATICCALL   = 0xfa
-	CREATE2      = 0xfb
 	REVERT       = 0xfd
 	INVALID      = 0xfe
 	SELFDESTRUCT = 0xff

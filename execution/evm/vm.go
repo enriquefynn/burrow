@@ -151,6 +151,28 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 	return
 }
 
+// Move2 Executes the 2nd step from the move operation
+// The input should prove the tx moved addr from Si to Sj,
+// Recreates the contract storage
+// executes move2 function in addr
+func (vm *VM) Move2(callState Interface, eventSink EventSink, caller, callee crypto.Address, code, proof, storage, input []byte, value uint64, gas *uint64, contractNonce uint64) (output []byte, err errors.CodedError) {
+
+	// The interpreter runs code in the contract code, here we want to run opcodes from the input
+	// Best way would be to implement some sort of lambdas for transactions!?
+	for i := 0; i < len(storage); i += 64 {
+		loc := RightPadWord256(storage[i : i+32])
+		val := RightPadWord256(storage[i+32 : i+64])
+		// fmt.Printf("Recreating: %x %x\n", loc, val)
+		callState.SetStorage(callee, loc, val)
+		useGasNegative(gas, GasStorageUpdate, callState)
+	}
+
+	// callState.SetShard(callee, bcmevm.ChainConfig().ShardID)
+	// ret := vm.execute(callState, eventSink, caller, callee, code, input, value, gas)
+
+	return nil, nil
+}
+
 func (vm *VM) call(callState Interface, eventSink EventSink, caller, callee crypto.Address, code,
 	input []byte, value uint64, gas *uint64, callType exec.CallType) (output []byte, err errors.CodedError) {
 
@@ -942,6 +964,11 @@ func (vm *VM) execute(callState Interface, eventSink EventSink, caller, callee c
 			*gas += gasLimit
 
 			vm.Debugf("resume %s (%v)\n", callee, gas)
+
+		case MOVE: // 0xF6
+			shardLoc := stack.PopBigInt().Uint64()
+			callState.SetShard(callee, shardLoc)
+			return nil
 
 		case RETURN: // 0xF3
 			offset, size := stack.PopBigInt(), stack.PopBigInt()

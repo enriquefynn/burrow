@@ -1176,6 +1176,25 @@ func TestGetBlockHash(t *testing.T) {
 	assertErrorCode(t, errors.ErrorCodeInvalidBlockNumber, err, "attempt to get block hash failed")
 }
 
+func TestMove(t *testing.T) {
+	st := newAppState()
+	cache := NewState(st, blockHashGetter)
+	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+
+	accountName := "account2addresstests"
+
+	callcode := MustSplice(PUSH32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, MOVE)
+
+	// Create accounts
+	account1 := newAccount(cache, "1")
+	account2 := makeAccountWithCode(cache, accountName, callcode)
+
+	var gas uint64 = 100000
+
+	ourVm.Call(cache, NewNoopEventSink(), account1, account2, callcode, []byte{}, 0, &gas)
+	assert.Equal(t, uint64(2), cache.GetShard(account2))
+}
+
 // These code segment helpers exercise the MSTORE MLOAD MSTORE cycle to test
 // both of the memory operations. Each MSTORE is done on the memory boundary
 // (at MSIZE) which Solidity uses to find guaranteed unallocated memory.
