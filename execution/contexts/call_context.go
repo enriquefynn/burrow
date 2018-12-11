@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/hyperledger/burrow/crypto"
 
 	corebin "encoding/binary"
@@ -178,7 +177,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 		var bStart uint32 = 12
 		for i := 0; i < 4; i++ {
 			if bStart+4 >= uint32(len(ctx.tx.Data)) {
-				return vm.ErrOutOfGas
+				return errors.ErrorCodeInputOutOfBounds
 			}
 			dLen := corebin.LittleEndian.Uint32(ctx.tx.Data[bStart : bStart+4])
 			data[i] = ctx.tx.Data[bStart+4 : bStart+4+dLen]

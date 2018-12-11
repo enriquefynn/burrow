@@ -167,12 +167,13 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller, callee cry
 	for i := 0; i < len(storage); i += 64 {
 		loc := RightPadWord256(storage[i : i+32])
 		val := RightPadWord256(storage[i+32 : i+64])
-		// fmt.Printf("Recreating: %x %x\n", loc, val)
+		fmt.Printf("Recreating: %x %x\n", loc, val)
 		callState.SetStorage(callee, loc, val)
 		useGasNegative(gas, GasStorageUpdate, callState)
 	}
 
 	callState.SetShard(callee, vm.params.ShardID)
+	// TODO: Check if that works
 	// ret := vm.execute(callState, eventSink, caller, callee, code, input, value, gas)
 
 	return nil, nil
