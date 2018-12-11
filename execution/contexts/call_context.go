@@ -162,14 +162,14 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 		// We already checked for permission
 		callee = crypto.NewContractAddress(caller, ctx.txe.TxHash)
 		code = ctx.tx.Data
-		txCache.CreateAccount(callee)
+		txCache.CreateAccount(callee, shardID)
 		ctx.Logger.TraceMsg("Creating new contract",
 			"contract_address", callee,
 			"init_code", code)
 	} else if isMove2 {
 		contractNonce = corebin.LittleEndian.Uint64(ctx.tx.Data[4:12])
 
-		txCache.CreateAccount(callee)
+		txCache.CreateAccount(callee, shardID)
 		ctx.Logger.TraceMsg("Executing MOVE2", "contract_address", callee, "init_code", code)
 		// TODO: Check sizes and return error if not correct
 		data = make([][]byte, 4)

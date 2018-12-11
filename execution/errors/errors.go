@@ -60,6 +60,7 @@ const (
 	ErrorCodeInvalidBlockNumber
 	ErrorCodeBlockNumberOutOfRange
 	ErrorCodeAlreadyVoted
+	ErrorCodeWrongShardExecution
 )
 
 func (c Code) ErrorCode() Code {

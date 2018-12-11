@@ -145,7 +145,7 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 	input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
 
 	if callState.GetShardID(callee) != vm.params.ShardID {
-		return nil, errors.ErrorCodeExecutionReverted
+		return nil, errors.ErrorCodeWrongShardExecution
 	}
 
 	// Always return output - we may have a reverted exception for which the return is meaningful
@@ -834,7 +834,7 @@ func (vm *VM) execute(callState Interface, eventSink EventSink, caller, callee c
 
 			// Establish a frame in which the putative account exists
 			childCallState := callState.NewCache()
-			create(childCallState, newAccount)
+			create(childCallState, newAccount, vm.params.ShardID)
 
 			// Run the input to get the contract code.
 			// NOTE: no need to copy 'input' as per Call contract.
@@ -911,7 +911,7 @@ func (vm *VM) execute(callState Interface, eventSink EventSink, caller, callee c
 						continue
 					}
 					// We're sending funds to a new account so we must create it first
-					createAccount(callState, callee, address)
+					createAccount(callState, callee, address, vm.params.ShardID)
 					if callState.Error() != nil {
 						continue
 					}
@@ -999,7 +999,7 @@ func (vm *VM) execute(callState Interface, eventSink EventSink, caller, callee c
 			if !callState.Exists(receiver) {
 				// If receiver address doesn't exist, try to create it
 				useGasNegative(gas, GasCreateAccount, callState)
-				createAccount(callState, callee, receiver)
+				createAccount(callState, callee, receiver, vm.params.ShardID)
 				if callState.Error() != nil {
 					continue
 				}
@@ -1023,17 +1023,17 @@ func (vm *VM) execute(callState Interface, eventSink EventSink, caller, callee c
 	return
 }
 
-func createAccount(st Interface, creator, address crypto.Address) {
+func createAccount(st Interface, creator, address crypto.Address, shardID uint64) {
 	EnsurePermission(st, creator, permission.CreateAccount)
-	create(st, address)
+	create(st, address, shardID)
 }
 
-func create(st Interface, address crypto.Address) {
+func create(st Interface, address crypto.Address, shardID uint64) {
 	if IsRegisteredNativeContract(address) {
 		st.PushError(errors.ErrorCodef(errors.ErrorCodeReservedAddress,
 			"cannot create account at %v because that address is reserved for a native contract", address))
 	}
-	st.CreateAccount(address)
+	st.CreateAccount(address, shardID)
 }
 
 // Returns a subslice from offset of length length and a bool

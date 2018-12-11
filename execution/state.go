@@ -320,7 +320,7 @@ func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word2
 	if value == binary.Zero256 {
 		ws.state.tree.Delete(storageKeyFormat.Key(address, key))
 	} else {
-		fmt.Printf("Write to storage: %x %x\n", key, value)
+		// fmt.Printf("Write to storage: %x %x\n", key, value)
 		ws.state.tree.Set(storageKeyFormat.Key(address, key), value.Bytes())
 	}
 	return nil

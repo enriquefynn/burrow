@@ -36,7 +36,7 @@ type Reader interface {
 }
 
 type Writer interface {
-	CreateAccount(address crypto.Address)
+	CreateAccount(address crypto.Address, shardID uint64)
 	InitCode(address crypto.Address, code []byte)
 	RemoveAccount(address crypto.Address)
 	SetStorage(address crypto.Address, key, value binary.Word256)
@@ -173,13 +173,13 @@ func (st *State) GetShardID(address crypto.Address) uint64 {
 
 // Writer
 
-func (st *State) CreateAccount(address crypto.Address) {
+func (st *State) CreateAccount(address crypto.Address, shardID uint64) {
 	if st.Exists(address) {
 		st.PushError(errors.ErrorCodef(errors.ErrorCodeDuplicateAddress,
 			"tried to create an account at an address that already exists: %v", address))
 		return
 	}
-	st.updateAccount(&acm.Account{Address: address})
+	st.updateAccount(&acm.Account{Address: address, ShardID: shardID})
 }
 
 func (st *State) InitCode(address crypto.Address, code []byte) {
