@@ -70,11 +70,12 @@ func newAppState() *FakeAppState {
 	return fas
 }
 
-func newParams() Params {
+func newParams(shardID uint64) Params {
 	return Params{
 		BlockHeight: 0,
 		BlockTime:   0,
 		GasLimit:    0,
+		ShardID:     shardID,
 	}
 }
 
@@ -84,15 +85,15 @@ func newAddress(name string) crypto.Address {
 	return crypto.MustAddressFromBytes(hasher.Sum(nil))
 }
 
-func newAccount(st Interface, name string) crypto.Address {
+func newAccount(st Interface, name string, shardID uint64) crypto.Address {
 	address := newAddress(name)
-	st.CreateAccount(address)
+	st.CreateAccount(address, shardID)
 	return address
 }
 
 func makeAccountWithCode(st Interface, name string, code []byte) crypto.Address {
 	address := newAddress(name)
-	st.CreateAccount(address)
+	st.CreateAccount(address, 1)
 	st.InitCode(address, code)
 	st.AddToBalance(address, 9999999)
 	return address
@@ -101,11 +102,11 @@ func makeAccountWithCode(st Interface, name string, code []byte) crypto.Address 
 // Runs a basic loop
 func TestVM(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	// Create accounts
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "101")
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "101", 1)
 
 	var gas uint64 = 100000
 
@@ -123,9 +124,9 @@ func TestVM(t *testing.T) {
 
 func TestSHL(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "101")
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "101", 1)
 
 	var gas uint64 = 100000
 
@@ -273,9 +274,9 @@ func TestSHL(t *testing.T) {
 
 func TestSHR(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "101")
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "101", 1)
 
 	var gas uint64 = 100000
 
@@ -427,9 +428,9 @@ func TestSHR(t *testing.T) {
 
 func TestSAR(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "101")
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "101", 1)
 
 	var gas uint64 = 100000
 
@@ -600,11 +601,11 @@ func TestSAR(t *testing.T) {
 //Test attempt to jump to bad destination (position 16)
 func TestJumpErr(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	// Create accounts
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "2")
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "2", 1)
 
 	var gas uint64 = 100000
 
@@ -632,11 +633,11 @@ func TestSubcurrency(t *testing.T) {
 	st := newAppState()
 	cache := NewState(st, blockHashGetter)
 	// Create accounts
-	account1 := newAccount(cache, "1, 2, 3")
-	account2 := newAccount(cache, "3, 2, 1")
+	account1 := newAccount(cache, "1, 2, 3", 1)
+	account2 := newAccount(cache, "3, 2, 1", 1)
 	cache.Sync()
 
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	var gas uint64 = 1000
 
@@ -667,11 +668,11 @@ func TestSubcurrency(t *testing.T) {
 //it is meant to test the implementation of the REVERT opcode
 func TestRevert(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	// Create accounts
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "1, 0, 1")
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "1, 0, 1", 1)
 
 	key, value := []byte{0x00}, []byte{0x00}
 	cache.SetStorage(account1, LeftPadWord256(key), LeftPadWord256(value))
@@ -699,12 +700,12 @@ func TestRevert(t *testing.T) {
 // Test sending tokens from a contract to another account
 func TestSendCall(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	// Create accounts
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "2")
-	account3 := newAccount(cache, "3")
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "2", 1)
+	account3 := newAccount(cache, "3", 1)
 	cache.Sync()
 
 	// account1 will call account2 which will trigger CALL opcode to account3
@@ -754,7 +755,7 @@ func TestStaticCallReadOnly(t *testing.T) {
 
 		t.Logf("Testing state-modifying bytecode: %v", illegalContractCode.MustTokens())
 		cache := NewState(newAppState(), blockHashGetter)
-		ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger, DebugOpcodes)
+		ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger, DebugOpcodes)
 		callee := makeAccountWithCode(cache, "callee", MustSplice(illegalContractCode, PUSH1, 0x1, return1()))
 
 		// equivalent to CALL, but enforce state immutability for children
@@ -777,7 +778,7 @@ func TestStaticCallWithValue(t *testing.T) {
 	var inOff, inSize, retOff, retSize byte
 
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	finalAddress := makeAccountWithCode(cache, "final", MustSplice(PUSH1, int64(20), return1()))
 
@@ -803,7 +804,7 @@ func TestStaticCallNoValue(t *testing.T) {
 
 	// this final test just checks that STATICCALL actually works
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	finalAddress := makeAccountWithCode(cache, "final", MustSplice(PUSH1, int64(20), return1()))
 	// intermediate account CALLs another contract *without* a value
@@ -827,7 +828,7 @@ func TestStaticCallNoValue(t *testing.T) {
 func TestCreate(t *testing.T) {
 	st := newAppState()
 	cache := NewState(st, blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	callee := makeAccountWithCode(cache, "callee", MustSplice(PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, CREATE, PUSH1, 0, MSTORE, PUSH1, 20, PUSH1, 12, RETURN))
 	// ensure pre-generated address has same sequence number
@@ -837,7 +838,7 @@ func TestCreate(t *testing.T) {
 	addr := crypto.NewContractAddress(callee, nonce)
 
 	var gas uint64 = 100000
-	caller := newAccount(cache, "1, 2, 3")
+	caller := newAccount(cache, "1, 2, 3", 1)
 	output, err := ourVm.Call(cache, NewNoopEventSink(), caller, callee, cache.GetCode(callee), []byte{}, 0, &gas)
 	assert.NoError(t, err, "Should return new address without error")
 	assert.Equal(t, addr.Bytes(), output, "Addresses should be equal")
@@ -847,7 +848,7 @@ func TestCreate(t *testing.T) {
 func TestCreate2(t *testing.T) {
 	st := newAppState()
 	cache := NewState(st, blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	// salt of 0s
 	var salt [32]byte
@@ -855,7 +856,7 @@ func TestCreate2(t *testing.T) {
 	addr := crypto.NewContractAddress2(callee, salt, cache.GetCode(callee))
 
 	var gas uint64 = 100000
-	caller := newAccount(cache, "1, 2, 3")
+	caller := newAccount(cache, "1, 2, 3", 1)
 	output, err := ourVm.Call(cache, NewNoopEventSink(), caller, callee, cache.GetCode(callee), []byte{}, 0, &gas)
 	assert.NoError(t, err, "Should return new address without error")
 	assert.Equal(t, addr.Bytes(), output, "Returned value not equal to create2 address")
@@ -868,7 +869,7 @@ func TestCreate2(t *testing.T) {
 // and then run it with 1 gas unit less, expecting a failure
 func TestDelegateCallGas(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	inOff := 0
 	inSize := 0 // no call data
@@ -924,7 +925,7 @@ func TestMemoryBounds(t *testing.T) {
 	memoryProvider := func(err errors.Sink) Memory {
 		return NewDynamicMemory(1024, 2048, err)
 	}
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger, MemoryProvider(memoryProvider))
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger, MemoryProvider(memoryProvider))
 	caller := makeAccountWithCode(cache, "caller", nil)
 	callee := makeAccountWithCode(cache, "callee", nil)
 	gas := uint64(100000)
@@ -968,10 +969,10 @@ func TestMemoryBounds(t *testing.T) {
 func TestMsgSender(t *testing.T) {
 	st := newAppState()
 	cache := NewState(st, blockHashGetter)
-	account1 := newAccount(cache, "1, 2, 3")
-	account2 := newAccount(cache, "3, 2, 1")
+	account1 := newAccount(cache, "1, 2, 3", 1)
+	account2 := newAccount(cache, "3, 2, 1", 1)
 
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	var gas uint64 = 100000
 
@@ -1013,11 +1014,11 @@ func TestMsgSender(t *testing.T) {
 
 func TestInvalid(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	// Create accounts
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "1, 0, 1")
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "1, 0, 1", 1)
 
 	var gas uint64 = 100000
 
@@ -1032,7 +1033,7 @@ func TestInvalid(t *testing.T) {
 
 func TestReturnDataSize(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	accountName := "account2addresstests"
 
@@ -1040,7 +1041,7 @@ func TestReturnDataSize(t *testing.T) {
 	callcode := MustSplice(PUSH32, RightPadWord256([]byte(ret)), PUSH1, 0x00, MSTORE, PUSH1, len(ret), PUSH1, 0x00, RETURN)
 
 	// Create accounts
-	account1 := newAccount(cache, "1")
+	account1 := newAccount(cache, "1", 1)
 	account2 := makeAccountWithCode(cache, accountName, callcode)
 
 	var gas uint64 = 100000
@@ -1070,7 +1071,7 @@ func TestReturnDataSize(t *testing.T) {
 
 func TestReturnDataCopy(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	accountName := "account2addresstests"
 
@@ -1078,7 +1079,7 @@ func TestReturnDataCopy(t *testing.T) {
 	callcode := MustSplice(PUSH32, RightPadWord256([]byte(ret)), PUSH1, 0x00, MSTORE, PUSH1, len(ret), PUSH1, 0x00, RETURN)
 
 	// Create accounts
-	account1 := newAccount(cache, "1")
+	account1 := newAccount(cache, "1", 1)
 	account2 := makeAccountWithCode(cache, accountName, callcode)
 
 	var gas uint64 = 100000
@@ -1105,10 +1106,10 @@ func TestReturnDataCopy(t *testing.T) {
 
 func TestCallNonExistent(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	account1 := newAccount(cache, "1")
+	account1 := newAccount(cache, "1", 1)
 	cache.AddToBalance(account1, 10000)
 	unknownAddress := newAddress("nonexistent")
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 	var gas uint64
 	amt := uint64(100)
 	_, err := ourVm.Call(cache, NewNoopEventSink(), account1, unknownAddress, nil, nil, amt, &gas)
@@ -1123,11 +1124,11 @@ func (ts testState) GetBlockHash(blockNumber uint64) (binary.Word256, error) {
 
 func TestGetBlockHash(t *testing.T) {
 	cache := NewTestState(newAppState(), blockHashGetter)
-	params := newParams()
+	params := newParams(1)
 
 	// Create accounts
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "101")
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "101", 1)
 
 	var gas uint64 = 100000
 
@@ -1179,14 +1180,14 @@ func TestGetBlockHash(t *testing.T) {
 func TestMove(t *testing.T) {
 	st := newAppState()
 	cache := NewState(st, blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	accountName := "account2addresstests"
 
 	callcode := MustSplice(PUSH32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, MOVE)
 
 	// Create accounts
-	account1 := newAccount(cache, "1")
+	account1 := newAccount(cache, "1", 1)
 	account2 := makeAccountWithCode(cache, accountName, callcode)
 
 	var gas uint64 = 100000
@@ -1198,17 +1199,17 @@ func TestMove(t *testing.T) {
 func TestMove2(t *testing.T) {
 	st := newAppState()
 	cache := NewState(st, blockHashGetter)
-	account1 := newAccount(cache, "1, 2, 3")
-	account2 := newAccount(cache, "3, 2, 1")
+	account1 := newAccount(cache, "1, 2, 3", 1)
+	account2 := newAccount(cache, "3, 2, 1", 1)
 
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	st2 := newAppState()
 	cache2 := NewState(st2, blockHashGetter)
-	account21 := newAccount(cache2, "1, 2, 3")
-	account22 := newAccount(cache2, "3, 2, 1")
+	account21 := newAccount(cache2, "1, 2, 3", 1)
+	account22 := newAccount(cache2, "3, 2, 1", 1)
 
-	ourVm2 := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm2 := NewVM(newParams(2), crypto.ZeroAddress, nil, logger)
 	var gas2 uint64 = 100000
 
 	var gas uint64 = 100000
@@ -1252,6 +1253,7 @@ func TestMove2(t *testing.T) {
 	_, err = ourVm.Call(cache, NewNoopEventSink(), account1, account2, contractCode, input, 0, &gas)
 	require.NoError(t, err)
 	assert.Equal(t, uint64(255), cache.GetShardID(account2))
+	cache.Sync()
 
 	// get() : should fail because contract cannot be called while moved
 	input = hex.MustDecodeString("6d4ce63c")
@@ -1434,10 +1436,10 @@ func TestHasPermission(t *testing.T) {
 func TestDataStackOverflow(t *testing.T) {
 	st := newAppState()
 	cache := NewState(st, blockHashGetter)
-	account1 := newAccount(cache, "1, 2, 3")
-	account2 := newAccount(cache, "3, 2, 1")
+	account1 := newAccount(cache, "1, 2, 3", 1)
+	account2 := newAccount(cache, "3, 2, 1", 1)
 
-	params := newParams()
+	params := newParams(1)
 	params.DataStackMaxDepth = 4
 	ourVm := NewVM(params, crypto.ZeroAddress, nil, logger)
 
@@ -1477,10 +1479,10 @@ func TestDataStackOverflow(t *testing.T) {
 func TestCallStackOverflow(t *testing.T) {
 	st := newAppState()
 	cache := NewState(st, blockHashGetter)
-	account1 := newAccount(cache, "1, 2, 3")
-	account2 := newAccount(cache, "3, 2, 1")
+	account1 := newAccount(cache, "1, 2, 3", 1)
+	account2 := newAccount(cache, "3, 2, 1", 1)
 
-	params := newParams()
+	params := newParams(1)
 
 	// Sender accepts lot of gaz but we run on a caped call stack node
 	var gas uint64 = 100000

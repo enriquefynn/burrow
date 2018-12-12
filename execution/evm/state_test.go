@@ -27,13 +27,13 @@ func TestState_PushError(t *testing.T) {
 func TestState_CreateAccount(t *testing.T) {
 	st := NewState(newAppState(), blockHashGetter)
 	address := newAddress("frogs")
-	st.CreateAccount(address)
+	st.CreateAccount(address, 1)
 	require.Nil(t, st.Error())
-	st.CreateAccount(address)
+	st.CreateAccount(address, 1)
 	assertErrorCode(t, errors.ErrorCodeDuplicateAddress, st.Error())
 
 	st = NewState(newAppState(), blockHashGetter)
-	st.CreateAccount(address)
+	st.CreateAccount(address, 1)
 	require.Nil(t, st.Error())
 	st.InitCode(address, []byte{1, 2, 3})
 	require.Nil(t, st.Error())
@@ -44,7 +44,7 @@ func TestState_Sync(t *testing.T) {
 	st := NewState(backend, blockHashGetter)
 	address := newAddress("frogs")
 
-	st.CreateAccount(address)
+	st.CreateAccount(address, 1)
 	amt := uint64(1232)
 	st.AddToBalance(address, amt)
 
@@ -61,7 +61,7 @@ func TestState_NewCache(t *testing.T) {
 	address := newAddress("frogs")
 
 	cache := st.NewCache()
-	cache.CreateAccount(address)
+	cache.CreateAccount(address, 1)
 	amt := uint64(1232)
 	cache.AddToBalance(address, amt)
 

@@ -50,7 +50,7 @@ func TestLog4(t *testing.T) {
 	st.accounts[account1.Address] = account1
 	st.accounts[account2.Address] = account2
 
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
 
 	txe := new(exec.TxExecution)
 
