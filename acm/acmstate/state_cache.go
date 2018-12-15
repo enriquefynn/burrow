@@ -184,6 +184,10 @@ func (cache *Cache) SetStorage(address crypto.Address, key binary.Word256, value
 	return nil
 }
 
+func (cache *Cache) SetStateHash(address crypto.Address, keys, values binary.Words256) error {
+	return nil
+}
+
 // Iterates over all cached storage items first in cache and then in backend until consumer returns true for 'stop'
 func (cache *Cache) IterateCachedStorage(address crypto.Address,
 	consumer func(key, value binary.Word256) error) error {
@@ -234,10 +238,16 @@ func (cache *Cache) Sync(st Writer) error {
 			}
 			// Sort keys
 			var keys binary.Words256
+			var values binary.Words256
 			for key := range accInfo.storage {
 				keys = append(keys, key)
 			}
 			sort.Sort(keys)
+			for _, key := range keys {
+				values = append(values, accInfo.storage[key])
+			}
+
+			st.SetStateHash(address, keys, values)
 			// Update account's storage
 			for _, key := range keys {
 				value := accInfo.storage[key]

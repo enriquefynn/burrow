@@ -79,6 +79,10 @@ func (fas *FakeAppState) SetStorage(addr crypto.Address, key Word256, value Word
 	return nil
 }
 
+func (fas *FakeAppState) SetStateHash(addr crypto.Address, key, value Words256) error {
+	return nil
+}
+
 func (fas *FakeAppState) accountsDump() string {
 	buf := new(bytes.Buffer)
 	fmt.Fprint(buf, "Dumping accounts...", "\n")

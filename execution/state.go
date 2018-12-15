@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/hyperledger/burrow/crypto/sha3"
 	"github.com/hyperledger/burrow/txs/payload"
 
 	"github.com/tendermint/go-amino"
@@ -49,10 +50,12 @@ const (
 
 var (
 	// Directly referenced values
-	accountKeyFormat  = storage.NewMustKeyFormat("a", crypto.AddressLength)
-	storageKeyFormat  = storage.NewMustKeyFormat("s", crypto.AddressLength, binary.Word256Length)
-	nameKeyFormat     = storage.NewMustKeyFormat("n", storage.VariadicSegmentLength)
-	proposalKeyFormat = storage.NewMustKeyFormat("p", sha256.Size)
+	accountKeyFormat     = storage.NewMustKeyFormat("a", crypto.AddressLength)
+	storageKeyFormat     = storage.NewMustKeyFormat("s", crypto.AddressLength, binary.Word256Length)
+	nameKeyFormat        = storage.NewMustKeyFormat("n", storage.VariadicSegmentLength)
+	proposalKeyFormat    = storage.NewMustKeyFormat("p", sha256.Size)
+	accountKeyHashFormat = storage.NewMustKeyFormat("h", crypto.AddressLength)
+
 	// Keys that reference references
 	blockRefKeyFormat = storage.NewMustKeyFormat("b", uint64Length)
 	txRefKeyFormat    = storage.NewMustKeyFormat("t", uint64Length, uint64Length)
@@ -134,6 +137,7 @@ func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error)
 			Address:     genAcc.Address,
 			Balance:     genAcc.Amount,
 			Permissions: perm,
+			// TODO ShardID?
 		}
 		err := s.writeState.UpdateAccount(acc)
 		if err != nil {
@@ -320,9 +324,18 @@ func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word2
 	if value == binary.Zero256 {
 		ws.state.tree.Delete(storageKeyFormat.Key(address, key))
 	} else {
-		fmt.Printf("Write to storage: %x %x\n", key, value)
+		//fmt.Printf("Write to storage: %x %x\n", key, value)
 		ws.state.tree.Set(storageKeyFormat.Key(address, key), value.Bytes())
 	}
+	// fmt.Printf("Hash: %x\n", ws.state.tree.Get(accountKeyFormat.Key(address[:])))
+	//fmt.Printf("ShardID from %v: %v\n", address, ws.state.tree.Get(accountShardKeyFormat.Key(address)))
+	// stor, _ := ws.state.GetStorage(address, key)
+	// fmt.Printf("Get from %v: %v\n", address, stor)
+	return nil
+}
+
+func (ws *writeState) SetStateHash(address crypto.Address, keys, values binary.Words256) error {
+	ws.state.tree.Set(accountKeyHashFormat.Key(address), sha3.Sha3Words(keys, values))
 	return nil
 }
 

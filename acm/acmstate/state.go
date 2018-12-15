@@ -36,6 +36,7 @@ type StorageGetter interface {
 type StorageSetter interface {
 	// Store a 32-byte value at key for the account at address, setting to Zero256 removes the key
 	SetStorage(address crypto.Address, key, value binary.Word256) error
+	SetStateHash(address crypto.Address, key, value binary.Words256) error
 }
 
 type StorageIterable interface {

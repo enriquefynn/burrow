@@ -62,6 +62,10 @@ func (ms *MemoryState) SetStorage(address crypto.Address, key, value binary.Word
 	return nil
 }
 
+func (ms *MemoryState) SetStateHash(address crypto.Address, key, value binary.Words256) error {
+	return nil
+}
+
 func (ms *MemoryState) IterateAccounts(consumer func(*acm.Account) error) (err error) {
 	for _, acc := range ms.Accounts {
 		if err := consumer(acc); err != nil {
