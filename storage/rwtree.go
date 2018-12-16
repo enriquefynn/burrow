@@ -28,6 +28,10 @@ func NewRWTree(db dbm.DB, cacheSize int) *RWTree {
 	}
 }
 
+func (rwt *RWTree) GetAccountWithProof(key []byte) ([]byte, *iavl.RangeProof, error) {
+	return rwt.tree.GetWithProof(key)
+}
+
 // Tries to load the execution state from DB, returns nil with no error if no state found
 func (rwt *RWTree) Load(version int64, overwriting bool) error {
 	const errHeader = "RWTree.Load():"

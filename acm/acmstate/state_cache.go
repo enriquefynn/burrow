@@ -188,6 +188,14 @@ func (cache *Cache) SetStateHash(address crypto.Address, keys, values binary.Wor
 	return nil
 }
 
+func (cache *Cache) GetStorageHashWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
+	return nil, nil, nil
+}
+
+func (cache *Cache) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
+	return nil, nil, nil
+}
+
 // Iterates over all cached storage items first in cache and then in backend until consumer returns true for 'stop'
 func (cache *Cache) IterateCachedStorage(address crypto.Address,
 	consumer func(key, value binary.Word256) error) error {

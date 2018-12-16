@@ -22,7 +22,6 @@ import (
 	"github.com/hyperledger/burrow/crypto/sha3"
 	"github.com/hyperledger/burrow/txs/payload"
 
-	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"github.com/hyperledger/burrow/acm"
@@ -337,6 +336,14 @@ func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word2
 func (ws *writeState) SetStateHash(address crypto.Address, keys, values binary.Words256) error {
 	ws.state.tree.Set(accountKeyHashFormat.Key(address), sha3.Sha3Words(keys, values))
 	return nil
+}
+
+func (s *State) GetStorageHashWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
+	return s.tree.GetAccountWithProof(accountKeyHashFormat.Key(address))
+}
+
+func (s *State) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
+	return s.tree.GetAccountWithProof(accountKeyFormat.Key(address))
 }
 
 func (s *State) IterateStorage(address crypto.Address, consumer func(key, value binary.Word256) (stop bool)) (stopped bool, err error) {

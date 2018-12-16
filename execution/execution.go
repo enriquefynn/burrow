@@ -385,6 +385,18 @@ func (exe *executor) PendingValidators() validator.IterableReader {
 	return exe.validatorCache.Delta
 }
 
+func (exe *executor) GetStorageHashWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
+	exe.RLock()
+	defer exe.RUnlock()
+	return exe.stateCache.GetStorageHashWithProof(address)
+}
+
+func (exe *executor) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
+	exe.RLock()
+	defer exe.RUnlock()
+	return exe.stateCache.GetAccountWithProof(address)
+}
+
 func (exe *executor) finaliseBlockExecution(header *abciTypes.Header) (*exec.BlockExecution, error) {
 	if header != nil && uint64(header.Height) != exe.block.Height {
 		return nil, fmt.Errorf("trying to finalise block execution with height %v but passed Tendermint"+
