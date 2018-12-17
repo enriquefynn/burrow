@@ -61,6 +61,8 @@ const (
 	ErrorCodeBlockNumberOutOfRange
 	ErrorCodeAlreadyVoted
 	ErrorCodeWrongShardExecution
+	ErrorInvalidProof
+	ErrorCannotDecodeAccount
 )
 
 func (c Code) ErrorCode() Code {
@@ -152,7 +154,13 @@ func (c Code) String() string {
 	case ErrorCodeBlockNumberOutOfRange:
 		return "block number out of range"
 	case ErrorCodeAlreadyVoted:
-		return "vote already registered for this address"
+		return "Vote already registered for this address"
+	case ErrorCodeWrongShardExecution:
+		return "Cannot execute tx different shard"
+	case ErrorInvalidProof:
+		return "Invalid proof, not corresponding to merkle-root"
+	case ErrorCannotDecodeAccount:
+		return "Cannot decode account"
 	default:
 		return "Unknown error"
 	}

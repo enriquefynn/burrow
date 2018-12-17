@@ -40,6 +40,7 @@ type Reader interface {
 
 type Writer interface {
 	CreateAccount(address crypto.Address, shardID uint64)
+	CreateMovedAccount(account *acm.Account)
 	InitCode(address crypto.Address, code []byte)
 	RemoveAccount(address crypto.Address)
 	SetStorage(address crypto.Address, key, value binary.Word256)
@@ -191,6 +192,10 @@ func (st *State) CreateAccount(address crypto.Address, shardID uint64) {
 		return
 	}
 	st.updateAccount(&acm.Account{Address: address, ShardID: shardID})
+}
+
+func (st *State) CreateMovedAccount(account *acm.Account) {
+	st.updateAccount(account)
 }
 
 func (st *State) InitCode(address crypto.Address, code []byte) {

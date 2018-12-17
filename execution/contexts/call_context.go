@@ -8,8 +8,6 @@ import (
 
 	"github.com/hyperledger/burrow/crypto"
 
-	corebin "encoding/binary"
-
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/acm/acmstate"
 	"github.com/hyperledger/burrow/execution/errors"
@@ -152,7 +150,6 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	moveOp := []byte{0, 0, 0, 0}
 	var contractNonce uint64
 	var isMove2 bool
-	var data [][]byte
 	if len(ctx.tx.Data) >= 4 {
 		isMove2 = reflect.DeepEqual(ctx.tx.Data[0:4], moveOp)
 	}
@@ -167,22 +164,9 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 			"contract_address", callee,
 			"init_code", code)
 	} else if isMove2 {
-		contractNonce = corebin.LittleEndian.Uint64(ctx.tx.Data[4:12])
-
+		fmt.Printf("Moved account: %v\n", ctx.tx.MovedAccount)
 		txCache.CreateAccount(callee, shardID)
 		ctx.Logger.TraceMsg("Executing MOVE2", "contract_address", callee, "init_code", code)
-		// TODO: Check sizes and return error if not correct
-		data = make([][]byte, 4)
-		//4 for move operation + 8 for contract nonce
-		var bStart uint32 = 12
-		for i := 0; i < 4; i++ {
-			if bStart+4 >= uint32(len(ctx.tx.Data)) {
-				return errors.ErrorCodeInputOutOfBounds
-			}
-			dLen := corebin.LittleEndian.Uint32(ctx.tx.Data[bStart : bStart+4])
-			data[i] = ctx.tx.Data[bStart+4 : bStart+4+dLen]
-			bStart = bStart + dLen + 4
-		}
 
 	} else {
 		if outAcc == nil || len(outAcc.Code) == 0 {

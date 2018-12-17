@@ -19,9 +19,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/big"
+	"reflect"
 	"strings"
 
 	"github.com/hyperledger/burrow/execution/evm/abi"
+	"github.com/tendermint/iavl"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/acm/acmstate"
@@ -33,6 +35,7 @@ import (
 	"github.com/hyperledger/burrow/execution/exec"
 	"github.com/hyperledger/burrow/logging"
 	"github.com/hyperledger/burrow/permission"
+	"github.com/hyperledger/burrow/storage"
 	"github.com/hyperledger/burrow/txs"
 )
 
@@ -160,19 +163,66 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 // The input should prove the tx moved addr from Si to Sj,
 // Recreates the contract storage
 // executes move2 function in addr
-func (vm *VM) Move2(callState Interface, eventSink EventSink, caller, callee crypto.Address, code, proof, storage, input []byte, value uint64, gas *uint64, contractNonce uint64) (output []byte, err errors.CodedError) {
+func (vm *VM) Move2(callState Interface, eventSink EventSink, caller, callee crypto.Address, blockRoot []byte, accountProof, storageProof *iavl.RangeProof, account, storageHash, storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
 
 	// The interpreter runs code in the contract code, here we want to run opcodes from the input
 	// Best way would be to implement some sort of lambdas for transactions!?
-	for i := 0; i < len(storage); i += 64 {
-		loc := RightPadWord256(storage[i : i+32])
-		val := RightPadWord256(storage[i+32 : i+64])
-		fmt.Printf("Recreating: %x %x\n", loc, val)
-		callState.SetStorage(callee, loc, val)
+	var keys Words256
+	var values Words256
+	// Assume ordered
+	for i := 0; i < len(storageOpcodes); i += 64 {
+		keys = append(keys, RightPadWord256(storageOpcodes[i:i+32]))
+		values = append(values, RightPadWord256(storageOpcodes[i+32:i+64]))
+	}
+	// Assume blockRoot is valid at this point
+	// Verify proof according to blockRoot
+	isValidProof := accountProof.Verify(blockRoot)
+	if isValidProof != nil {
+		return nil, errors.ErrorInvalidProof
+	}
+	isValidProof = storageProof.Verify(blockRoot)
+	if isValidProof != nil {
+		return nil, errors.ErrorInvalidProof
+	}
+
+	accountKeyFormat := storage.NewMustKeyFormat("a", crypto.AddressLength)
+	accountKeyHashFormat := storage.NewMustKeyFormat("h", crypto.AddressLength)
+
+	isValidProof = storageProof.VerifyItem(accountKeyFormat.Key(callee), account)
+	if isValidProof != nil {
+		return nil, errors.ErrorInvalidProof
+	}
+
+	isValidProof = storageProof.VerifyItem(accountKeyHashFormat.Key(callee), storageHash)
+	if isValidProof != nil {
+		return nil, errors.ErrorInvalidProof
+	}
+
+	calculatedStorageHash := sha3.Sha3Words(keys, values)
+	if !reflect.DeepEqual(calculatedStorageHash, storageHash) {
+		return nil, errors.ErrorInvalidProof
+	}
+
+	// All proofs are ok from here
+	decodedAccount, er := acm.Decode(account)
+	if er != nil {
+		return nil, errors.ErrorCannotDecodeAccount
+	}
+	if decodedAccount.ShardID != vm.params.ShardID {
+		return nil, errors.ErrorCodeWrongShardExecution
+	}
+
+	callState.CreateMovedAccount(decodedAccount)
+
+	fmt.Printf("StorageHash %v: %x\n", callee, calculatedStorageHash)
+
+	for i := range keys {
+		// fmt.Printf("Recreating: %x %x\n", keys[i], values[i])
+		callState.SetStorage(callee, keys[i], values[i])
 		useGasNegative(gas, GasStorageUpdate, callState)
 	}
 
-	callState.SetShard(callee, vm.params.ShardID)
+	// callState.SetShard(callee, vm.params.ShardID)
 	// TODO: Check if that works
 	// ret := vm.execute(callState, eventSink, caller, callee, code, input, value, gas)
 
