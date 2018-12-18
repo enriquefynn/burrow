@@ -163,10 +163,13 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 // The input should prove the tx moved addr from Si to Sj,
 // Recreates the contract storage
 // executes move2 function in addr
-func (vm *VM) Move2(callState Interface, eventSink EventSink, caller, callee crypto.Address, blockRoot []byte, accountProof, storageProof *iavl.RangeProof, account, storageHash, storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
+func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Address, blockRoot []byte, accountProof, storageProof *iavl.RangeProof, account *acm.Account, storageHash, storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
 
-	// The interpreter runs code in the contract code, here we want to run opcodes from the input
-	// Best way would be to implement some sort of lambdas for transactions!?
+	// TODO: StorageRoot does not work properly, have to encode
+	// the storage of each contract in a merkle-tree like thing
+	// Problem is that if storage changes, we have to rehash every storage
+	// value, but, we don't really know where this storage value is
+
 	var keys Words256
 	var values Words256
 	// Assume ordered
@@ -188,12 +191,19 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller, callee cry
 	accountKeyFormat := storage.NewMustKeyFormat("a", crypto.AddressLength)
 	accountKeyHashFormat := storage.NewMustKeyFormat("h", crypto.AddressLength)
 
-	isValidProof = storageProof.VerifyItem(accountKeyFormat.Key(callee), account)
+	cdc := amino.NewCodec()
+
+	encodedAccount, errMarshaling := cdc.MarshalBinary(account)
+	if errMarshaling != nil {
+		return nil, errors.ErrorCodeWrongShardExecution
+	}
+
+	isValidProof = accountProof.VerifyItem(accountKeyFormat.Key(account.Address), encodedAccount)
 	if isValidProof != nil {
 		return nil, errors.ErrorInvalidProof
 	}
 
-	isValidProof = storageProof.VerifyItem(accountKeyHashFormat.Key(callee), storageHash)
+	isValidProof = storageProof.VerifyItem(accountKeyHashFormat.Key(account.Address), storageHash)
 	if isValidProof != nil {
 		return nil, errors.ErrorInvalidProof
 	}
@@ -204,21 +214,15 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller, callee cry
 	}
 
 	// All proofs are ok from here
-	decodedAccount, er := acm.Decode(account)
-	if er != nil {
-		return nil, errors.ErrorCannotDecodeAccount
-	}
-	if decodedAccount.ShardID != vm.params.ShardID {
+	if account.ShardID != vm.params.ShardID {
 		return nil, errors.ErrorCodeWrongShardExecution
 	}
 
-	callState.CreateMovedAccount(decodedAccount)
-
-	fmt.Printf("StorageHash %v: %x\n", callee, calculatedStorageHash)
+	callState.CreateMovedAccount(account)
 
 	for i := range keys {
 		// fmt.Printf("Recreating: %x %x\n", keys[i], values[i])
-		callState.SetStorage(callee, keys[i], values[i])
+		callState.SetStorage(account.Address, keys[i], values[i])
 		useGasNegative(gas, GasStorageUpdate, callState)
 	}
 

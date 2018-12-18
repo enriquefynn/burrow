@@ -2,7 +2,6 @@ package contexts
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -130,8 +129,11 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	if err != nil {
 		return err
 	}
-
-	createContract := ctx.tx.Address == nil
+	createContract := false
+	isMove2 := ctx.tx.BlockRoot != nil
+	if !isMove2 {
+		createContract = ctx.tx.Address == nil
+	}
 	// VM call variables
 	var (
 		gas     uint64         = ctx.tx.GasLimit
@@ -147,12 +149,6 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 			ShardID:     shardID,
 		}
 	)
-	moveOp := []byte{0, 0, 0, 0}
-	var contractNonce uint64
-	var isMove2 bool
-	if len(ctx.tx.Data) >= 4 {
-		isMove2 = reflect.DeepEqual(ctx.tx.Data[0:4], moveOp)
-	}
 
 	// get or create callee
 	if createContract {
@@ -164,10 +160,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 			"contract_address", callee,
 			"init_code", code)
 	} else if isMove2 {
-		fmt.Printf("Moved account: %v\n", ctx.tx.MovedAccount)
-		txCache.CreateAccount(callee, shardID)
 		ctx.Logger.TraceMsg("Executing MOVE2", "contract_address", callee, "init_code", code)
-
 	} else {
 		if outAcc == nil || len(outAcc.Code) == 0 {
 			// if you call an account that doesn't exist
@@ -211,7 +204,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	var exception errors.CodedError
 
 	if isMove2 {
-		ret, exception = vmach.Move2(txCache, ctx.txe, caller, callee, data[0], data[1], data[2], data[3], value, &gas, contractNonce)
+		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.BlockRoot, ctx.tx.AccountProof, ctx.tx.StorageProof, ctx.tx.MovedAccount, ctx.tx.StorageHash, ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
 	} else {
 		ret, exception = vmach.Call(txCache, ctx.txe, caller, callee, code, ctx.tx.Data, value, &gas)
 	}

@@ -20,6 +20,7 @@ import (
 	"sync"
 
 	"github.com/hyperledger/burrow/execution/errors"
+	"github.com/tendermint/iavl"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/binary"
@@ -254,8 +255,9 @@ func (cache *Cache) Sync(st Writer) error {
 			for _, key := range keys {
 				values = append(values, accInfo.storage[key])
 			}
-
-			st.SetStateHash(address, keys, values)
+			if len(keys) != 0 {
+				st.SetStorageHash(address, keys, values)
+			}
 			// Update account's storage
 			for _, key := range keys {
 				value := accInfo.storage[key]
