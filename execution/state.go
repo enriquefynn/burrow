@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/hyperledger/burrow/crypto/sha3"
 	"github.com/hyperledger/burrow/txs/payload"
 
+	"github.com/tendermint/iavl"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"github.com/hyperledger/burrow/acm"
@@ -49,8 +49,8 @@ const (
 
 var (
 	// Directly referenced values
-	accountKeyFormat     = storage.NewMustKeyFormat("a", crypto.AddressLength)
-	storageKeyFormat     = storage.NewMustKeyFormat("s", crypto.AddressLength, binary.Word256Length)
+	accountKeyFormat = storage.NewMustKeyFormat("a", crypto.AddressLength)
+	// storageKeyFormat     = storage.NewMustKeyFormat("s", crypto.AddressLength, binary.Word256Length)
 	nameKeyFormat        = storage.NewMustKeyFormat("n", storage.VariadicSegmentLength)
 	proposalKeyFormat    = storage.NewMustKeyFormat("p", sha256.Size)
 	accountKeyHashFormat = storage.NewMustKeyFormat("h", crypto.AddressLength)
@@ -93,14 +93,15 @@ type CommitID struct {
 type State struct {
 	// Values not reassigned
 	sync.RWMutex
-	writeState   *writeState
-	height       uint64
-	accountStats state.AccountStats
-	db           dbm.DB
-	cacheDB      *storage.CacheDB
-	tree         *storage.RWTree
-	refs         storage.KVStore
-	codec        *amino.Codec
+	writeState      *writeState
+	height          uint64
+	accountStats    state.AccountStats
+	db              dbm.DB
+	cacheDB         *storage.CacheDB
+	tree            *storage.RWTree
+	refs            storage.KVStore
+	codec           *amino.Codec
+	accountsStorage map[crypto.Address]*storage.RWTree
 }
 
 // Create a new State object
@@ -110,11 +111,12 @@ func NewState(db dbm.DB) *State {
 	tree := storage.NewRWTree(storage.NewPrefixDB(cacheDB, treePrefix), defaultCacheCapacity)
 	refs := storage.NewPrefixDB(cacheDB, refsPrefix)
 	s := &State{
-		db:      db,
-		cacheDB: cacheDB,
-		tree:    tree,
-		refs:    refs,
-		codec:   amino.NewCodec(),
+		db:              db,
+		cacheDB:         cacheDB,
+		tree:            tree,
+		refs:            refs,
+		codec:           amino.NewCodec(),
+		accountsStorage: make(map[crypto.Address]*storage.RWTree),
 	}
 
 	s.writeState = &writeState{state: s}
@@ -273,6 +275,10 @@ func (ws *writeState) UpdateAccount(account *acm.Account) error {
 	if account == nil {
 		return fmt.Errorf("UpdateAccount passed nil account in State")
 	}
+	if ws.state.accountsStorage[account.Address] == nil {
+		ws.state.accountsStorage[account.Address] = storage.NewRWTree(storage.NewPrefixDB(ws.state.cacheDB, account.String()), defaultCacheCapacity)
+	}
+	account.StorageRoot = ws.state.accountsStorage[account.Address].Hash()
 	encodedAccount, err := account.Encode()
 	if err != nil {
 		return fmt.Errorf("UpdateAccount could not encode account: %v", err)
@@ -296,6 +302,12 @@ func (ws *writeState) RemoveAccount(address crypto.Address) (err error) {
 	return err
 }
 
+// func (ws *writeState) RemoveAccount(address crypto.Address) error {
+// 	ws.state.tree.Delete(accountKeyFormat.Key(address))
+// 	ws.state.accountsStorage[address] = nil
+// 	return nil
+// }
+
 func (s *State) IterateAccounts(consumer func(*acm.Account) (stop bool)) (stopped bool, err error) {
 	it := accountKeyFormat.Iterator(s.tree, nil, nil)
 	for it.Valid() {
@@ -316,15 +328,28 @@ func (s *State) GetAccountStats() state.AccountStats {
 }
 
 func (s *State) GetStorage(address crypto.Address, key binary.Word256) (binary.Word256, error) {
-	return binary.LeftPadWord256(s.tree.Get(storageKeyFormat.Key(address, key))), nil
+	return binary.LeftPadWord256(s.accountsStorage[address].Get(key.Bytes())), nil
+	// return binary.LeftPadWord256(s.tree.Get(storageKeyFormat.Key(address, key))), nil
 }
 
 func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word256) error {
+	// ws.state.accountsStorage[address].Save()
+	// fmt.Printf("Storage: %v\n", ws.state.accountsStorage[address].Get(key.Bytes()))
 	if value == binary.Zero256 {
-		ws.state.tree.Delete(storageKeyFormat.Key(address, key))
+		ws.state.accountsStorage[address].Delete(key.Bytes())
+		// ws.state.tree.Delete(storageKeyFormat.Key(address, key))
 	} else {
+		ws.state.accountsStorage[address].Set(key.Bytes(), value.Bytes())
+
+		// TODO: Maybe do not save every time in here
+		ws.state.accountsStorage[address].Save()
 		//fmt.Printf("Write to storage: %x %x\n", key, value)
-		ws.state.tree.Set(storageKeyFormat.Key(address, key), value.Bytes())
+		// ws.state.tree.Set(storageKeyFormat.Key(address, key), value.Bytes())
+		// ws.state.tree.Save()
+		// fmt.Printf("Storage[%x] = %x\n", key, ws.state.tree.Get(storageKeyFormat.Key(address, key)))
+		// fmt.Printf("Storage[%x] = %x\n", key, ws.state.accountsStorage[address].Get(key.Bytes()))
+		// fmt.Printf("Storage Hash: %x\n", ws.state.tree.Hash())
+
 	}
 	// fmt.Printf("Hash: %x\n", ws.state.tree.Get(accountKeyFormat.Key(address[:])))
 	//fmt.Printf("ShardID from %v: %v\n", address, ws.state.tree.Get(accountShardKeyFormat.Key(address)))
@@ -333,21 +358,13 @@ func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word2
 	return nil
 }
 
-func (ws *writeState) SetStateHash(address crypto.Address, keys, values binary.Words256) error {
-	ws.state.tree.Set(accountKeyHashFormat.Key(address), sha3.Sha3Words(keys, values))
-	return nil
-}
-
-func (s *State) GetStorageHashWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
-	return s.tree.GetAccountWithProof(accountKeyHashFormat.Key(address))
-}
-
 func (s *State) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
 	return s.tree.GetAccountWithProof(accountKeyFormat.Key(address))
 }
 
 func (s *State) IterateStorage(address crypto.Address, consumer func(key, value binary.Word256) (stop bool)) (stopped bool, err error) {
-	it := storageKeyFormat.Fix(address).Iterator(s.tree, nil, nil)
+	// it := storageKeyFormat.Fix(address).Iterator(s.tree, nil, nil)
+	it := s.accountsStorage[address].Iterator(nil, nil)
 	for it.Valid() {
 		key := it.Key()
 		// Note: no left padding should occur unless there is a bug and non-words have been written to this storage tree

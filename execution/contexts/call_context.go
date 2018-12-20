@@ -204,7 +204,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	var exception errors.CodedError
 
 	if isMove2 {
-		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.BlockRoot, ctx.tx.AccountProof, ctx.tx.StorageProof, ctx.tx.MovedAccount, ctx.tx.StorageHash, ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
+		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.BlockRoot, ctx.tx.AccountProof, ctx.tx.MovedAccount, ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
 	} else {
 		ret, exception = vmach.Call(txCache, ctx.txe, caller, callee, code, ctx.tx.Data, value, &gas)
 	}

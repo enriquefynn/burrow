@@ -52,10 +52,6 @@ func (ms *MemoryState) GetStorage(address crypto.Address, key binary.Word256) (b
 	return value, nil
 }
 
-func (ms *MemoryState) GetStorageHashWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
-	return nil, nil, nil
-}
-
 func (ms *MemoryState) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
 	return nil, nil, nil
 }

@@ -15,8 +15,6 @@ package sha3
 import (
 	"encoding/binary"
 	"hash"
-
-	bbinary "github.com/hyperledger/burrow/binary"
 )
 
 // laneSize is the size in bytes of each "lane" of the internal state of SHA3 (5 * 5 * 8).
@@ -222,16 +220,6 @@ func Sha3(data ...[]byte) []byte {
 	d := NewKeccak256()
 	for _, b := range data {
 		d.Write(b)
-	}
-	return d.Sum(nil)
-}
-
-func Sha3Words(data ...bbinary.Words256) []byte {
-	d := NewKeccak256()
-	for _, words := range data {
-		for _, b := range words {
-			d.Write(b.Bytes())
-		}
 	}
 	return d.Sum(nil)
 }

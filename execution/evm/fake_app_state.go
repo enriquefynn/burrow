@@ -17,6 +17,8 @@ package evm
 import (
 	"fmt"
 
+	"github.com/tendermint/iavl"
+
 	"bytes"
 
 	"github.com/hyperledger/burrow/acm"
@@ -67,15 +69,6 @@ func (fas *FakeAppState) GetStorage(addr crypto.Address, key Word256) (Word256, 
 	}
 }
 
-func (fas *FakeAppState) GetStorageHashWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
-	_, ok := fas.accounts[address]
-	if !ok {
-		fmt.Println("\n\n", fas.accountsDump())
-		panic(fmt.Sprintf("Invalid account addr: %s", address))
-	}
-	return fas.storageHash[address], nil, nil
-}
-
 func (fas *FakeAppState) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
 	return nil, nil, nil
 }
@@ -89,10 +82,6 @@ func (fas *FakeAppState) SetStorage(addr crypto.Address, key Word256, value Word
 	}
 
 	fas.storage[addr.String()+key.String()] = value
-	return nil
-}
-
-func (fas *FakeAppState) SetStateHash(addr crypto.Address, key, value Words256) error {
 	return nil
 }
 

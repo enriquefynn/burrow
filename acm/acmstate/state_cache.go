@@ -185,14 +185,6 @@ func (cache *Cache) SetStorage(address crypto.Address, key binary.Word256, value
 	return nil
 }
 
-func (cache *Cache) SetStateHash(address crypto.Address, keys, values binary.Words256) error {
-	return nil
-}
-
-func (cache *Cache) GetStorageHashWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
-	return nil, nil, nil
-}
-
 func (cache *Cache) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
 	return nil, nil, nil
 }
@@ -247,17 +239,10 @@ func (cache *Cache) Sync(st Writer) error {
 			}
 			// Sort keys
 			var keys binary.Words256
-			var values binary.Words256
 			for key := range accInfo.storage {
 				keys = append(keys, key)
 			}
 			sort.Sort(keys)
-			for _, key := range keys {
-				values = append(values, accInfo.storage[key])
-			}
-			if len(keys) != 0 {
-				st.SetStorageHash(address, keys, values)
-			}
 			// Update account's storage
 			for _, key := range keys {
 				value := accInfo.storage[key]
@@ -266,7 +251,6 @@ func (cache *Cache) Sync(st Writer) error {
 					return err
 				}
 			}
-
 		}
 		accInfo.RUnlock()
 	}

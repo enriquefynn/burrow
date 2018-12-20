@@ -21,8 +21,6 @@ type Interface interface {
 	NewCache(cacheOptions ...acmstate.CacheOption) Interface
 	// Sync this state cache to into its originator
 	Sync() errors.CodedError
-
-	GetStorageHashWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error)
 }
 
 type Reader interface {
@@ -90,10 +88,6 @@ func (st *State) Sync() errors.CodedError {
 		return errors.AsException(err)
 	}
 	return nil
-}
-
-func (st *State) GetStorageHashWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
-	return st.backend.GetStorageHashWithProof(address)
 }
 
 func (st *State) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {

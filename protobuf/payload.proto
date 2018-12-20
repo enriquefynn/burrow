@@ -74,15 +74,11 @@ message CallTx {
     acm.Account MovedAccount = 6;
     // Proof that account was indeed moved 
     bytes AccountProof = 7 [(gogoproto.customtype) = "github.com/hyperledger/burrow/vendor/github.com/tendermint/iavl.RangeProof"];
-
-    // Storage hash 
-    bytes StorageHash = 8;
-    // Proof that StorageHash is truthful
-    bytes StorageProof = 9 [(gogoproto.customtype) = "github.com/hyperledger/burrow/vendor/github.com/tendermint/iavl.RangeProof"];
     // List of storageOpcodes
-    bytes StorageOpCodes = 10;
+    bytes StorageOpCodes = 8;
     // BlockRoot to verify from
-    bytes BlockRoot = 11;
+    bytes BlockRoot = 9;
+    
 }
 
 // A payment between two sets of parties

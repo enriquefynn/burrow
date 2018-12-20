@@ -163,7 +163,7 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 // The input should prove the tx moved addr from Si to Sj,
 // Recreates the contract storage
 // executes move2 function in addr
-func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Address, blockRoot []byte, accountProof, storageProof *iavl.RangeProof, account *acm.Account, storageHash, storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
+func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Address, blockRoot []byte, accountProof *iavl.RangeProof, account *acm.Account, storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
 
 	// TODO: StorageRoot does not work properly, have to encode
 	// the storage of each contract in a merkle-tree like thing
@@ -183,14 +183,8 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 	if isValidProof != nil {
 		return nil, errors.ErrorInvalidProof
 	}
-	isValidProof = storageProof.Verify(blockRoot)
-	if isValidProof != nil {
-		return nil, errors.ErrorInvalidProof
-	}
 
 	accountKeyFormat := storage.NewMustKeyFormat("a", crypto.AddressLength)
-	accountKeyHashFormat := storage.NewMustKeyFormat("h", crypto.AddressLength)
-
 	cdc := amino.NewCodec()
 
 	encodedAccount, errMarshaling := cdc.MarshalBinary(account)
@@ -203,13 +197,8 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 		return nil, errors.ErrorInvalidProof
 	}
 
-	isValidProof = storageProof.VerifyItem(accountKeyHashFormat.Key(account.Address), storageHash)
-	if isValidProof != nil {
-		return nil, errors.ErrorInvalidProof
-	}
-
-	calculatedStorageHash := sha3.Sha3Words(keys, values)
-	if !reflect.DeepEqual(calculatedStorageHash, storageHash) {
+	storageHash := SimulateStorageTree(keys, values)
+	if !reflect.DeepEqual(storageHash, account.StorageRoot) {
 		return nil, errors.ErrorInvalidProof
 	}
 
