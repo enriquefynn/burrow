@@ -331,6 +331,7 @@ func TestCallPermission(t *testing.T) {
 	simpleAcc := &acm.Account{
 		Address:     simpleContractAddr,
 		Balance:     0,
+		ShardID:     1,
 		Code:        []byte{0x60},
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
@@ -352,6 +353,7 @@ func TestCallPermission(t *testing.T) {
 	caller1Acc := &acm.Account{
 		Address:     caller1ContractAddr,
 		Balance:     10000,
+		ShardID:     1,
 		Code:        contractCode,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
@@ -393,6 +395,7 @@ func TestCallPermission(t *testing.T) {
 	caller2Acc := &acm.Account{
 		Address:     caller2ContractAddr,
 		Balance:     1000,
+		ShardID:     1,
 		Code:        contractCode2,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
@@ -522,6 +525,7 @@ func TestCreatePermission(t *testing.T) {
 	contractAcc = &acm.Account{
 		Address:     contractAddr,
 		Balance:     1000,
+		ShardID:     1,
 		Code:        code,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
@@ -637,6 +641,7 @@ func TestCreateAccountPermission(t *testing.T) {
 	caller1Acc := &acm.Account{
 		Address:     caller1ContractAddr,
 		Balance:     0,
+		ShardID:     1,
 		Code:        contractCode,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
@@ -702,6 +707,7 @@ func TestSNativeCALL(t *testing.T) {
 	doug := &acm.Account{
 		Address:     DougAddress,
 		Balance:     0,
+		ShardID:     1,
 		Code:        nil,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
