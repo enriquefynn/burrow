@@ -14,7 +14,7 @@ import permission "github.com/hyperledger/burrow/permission"
 
 import github_com_hyperledger_burrow_crypto "github.com/hyperledger/burrow/crypto"
 import github_com_hyperledger_burrow_binary "github.com/hyperledger/burrow/binary"
-import github_com_hyperledger_burrow_vendor_github_com_tendermint_iavl "github.com/hyperledger/burrow/vendor/github.com/tendermint/iavl"
+import github_com_hyperledger_burrow_vendor_github_com_tendermint_iavl "github.com/tendermint/iavl"
 
 import io "io"
 
