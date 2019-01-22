@@ -738,18 +738,18 @@ func TestStaticCallReadOnly(t *testing.T) {
 	value := byte(0x69)
 	var inOff, inSize, retOff, retSize byte
 
-	// logDefault := MustSplice(PUSH1, inSize, PUSH1, inOff)
-	// testRecipient := newAddress("1")
+	logDefault := MustSplice(PUSH1, inSize, PUSH1, inOff)
+	testRecipient := newAddress("1")
 	// check all illegal state modifications in child staticcall frame
 	for _, illegalContractCode := range []acm.Bytecode{
-		// MustSplice(PUSH9, "arbitrary", PUSH1, 0x00, SSTORE),
-		// MustSplice(logDefault, LOG0),
-		// MustSplice(logDefault, PUSH1, 0x1, LOG1),
-		// MustSplice(logDefault, PUSH1, 0x1, PUSH1, 0x1, LOG2),
-		// MustSplice(logDefault, PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1, LOG3),
-		// MustSplice(logDefault, PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1, LOG4),
+		MustSplice(PUSH9, "arbitrary", PUSH1, 0x00, SSTORE),
+		MustSplice(logDefault, LOG0),
+		MustSplice(logDefault, PUSH1, 0x1, LOG1),
+		MustSplice(logDefault, PUSH1, 0x1, PUSH1, 0x1, LOG2),
+		MustSplice(logDefault, PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1, LOG3),
+		MustSplice(logDefault, PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1, LOG4),
 		MustSplice(PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x69, CREATE),
-		// MustSplice(PUSH20, testRecipient, SELFDESTRUCT),
+		MustSplice(PUSH20, testRecipient, SELFDESTRUCT),
 	} {
 		// TODO: CREATE2
 

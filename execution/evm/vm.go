@@ -148,7 +148,8 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 	input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
 
 	if callState.GetShardID(callee) != vm.params.ShardID {
-		return nil, errors.ErrorCodeWrongShardExecution
+		callState.PushError(errors.ErrorCodeWrongShardExecution)
+		// return nil, errors.ErrorCodeWrongShardExecution
 	}
 
 	// Always return output - we may have a reverted exception for which the return is meaningful
