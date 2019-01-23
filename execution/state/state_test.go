@@ -291,8 +291,6 @@ func TestMove2(t *testing.T) {
 	accountProof.MarshalTo(proofBytes)
 	proof2.Unmarshal(proofBytes)
 
-	fmt.Printf("Account: %v\n", decodedAccount)
-
 	storageKeyValues := binary.Int64ToWord256(0).Bytes()
 	storageKeyValues = append(storageKeyValues, binary.Int64ToWord256(10).Bytes()...)
 

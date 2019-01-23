@@ -272,12 +272,14 @@ func (ws *writeState) statsRemoveAccount(acc *acm.Account) {
 }
 
 func (ws *writeState) UpdateAccount(account *acm.Account) error {
+	// fmt.Printf("Updating account: %v\n", account)
 	if account == nil {
 		return fmt.Errorf("UpdateAccount passed nil account in State")
 	}
 	if ws.state.accountsStorage[account.Address] == nil {
 		ws.state.accountsStorage[account.Address] = storage.NewRWTree(storage.NewPrefixDB(ws.state.cacheDB, account.String()), defaultCacheCapacity)
 	}
+	// fmt.Printf("ROOT: %v\n", ws.state.accountsStorage[account.Address])
 	account.StorageRoot = ws.state.accountsStorage[account.Address].Hash()
 	encodedAccount, err := account.Encode()
 	if err != nil {
@@ -333,6 +335,7 @@ func (s *State) GetStorage(address crypto.Address, key binary.Word256) (binary.W
 }
 
 func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word256) error {
+	// fmt.Printf("Store in %v: %x %x\n", address, key, value)
 	// ws.state.accountsStorage[address].Save()
 	// fmt.Printf("Storage: %v\n", ws.state.accountsStorage[address].Get(key.Bytes()))
 	if value == binary.Zero256 {
@@ -342,7 +345,6 @@ func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word2
 		ws.state.accountsStorage[address].Set(key.Bytes(), value.Bytes())
 
 		// TODO: Maybe do not save every time in here
-		ws.state.accountsStorage[address].Save()
 		//fmt.Printf("Write to storage: %x %x\n", key, value)
 		// ws.state.tree.Set(storageKeyFormat.Key(address, key), value.Bytes())
 		// ws.state.tree.Save()
@@ -351,6 +353,10 @@ func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word2
 		// fmt.Printf("Storage Hash: %x\n", ws.state.tree.Hash())
 
 	}
+
+	// fmt.Printf("Storage Hash: %v\n", ws.state.accountsStorage[address].Hash())
+	ws.state.accountsStorage[address].Save()
+	// fmt.Printf("Storage Hash: %x\n", ws.state.accountsStorage[address].Hash())
 	// fmt.Printf("Hash: %x\n", ws.state.tree.Get(accountKeyFormat.Key(address[:])))
 	//fmt.Printf("ShardID from %v: %v\n", address, ws.state.tree.Get(accountShardKeyFormat.Key(address)))
 	// stor, _ := ws.state.GetStorage(address, key)

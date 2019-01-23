@@ -12,5 +12,6 @@ func SimulateStorageTree(keys, values binary.Words256) []byte {
 	for i, _ := range keys {
 		rwt.Set(keys[i].Bytes(), values[i].Bytes())
 	}
+	rwt.Save()
 	return rwt.Hash()
 }
