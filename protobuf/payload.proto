@@ -74,7 +74,7 @@ message CallTx {
     // Account to use when moving
     acm.Account MovedAccount = 6;
     // Proof that account was indeed moved 
-    bytes AccountProof = 7 [(gogoproto.customtype) = "github.com/hyperledger/burrow/vendor/github.com/tendermint/iavl.RangeProof"];
+    bytes AccountProof = 7 [(gogoproto.customtype) = "github.com/tendermint/iavl.RangeProof"];
     // List of storageOpcodes
     bytes StorageOpCodes = 8;
     // BlockRoot to verify from
