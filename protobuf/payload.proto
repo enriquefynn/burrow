@@ -7,7 +7,6 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "permission.proto";
 import "spec.proto";
 import "acm.proto";
-import "github.com/tendermint/tendermint/abci/types/types.proto";
 
 package payload;
 
@@ -79,7 +78,8 @@ message CallTx {
     bytes StorageOpCodes = 8;
     // BlockRoot to verify from
     bytes BlockRoot = 9;
-    types.Header BlockHeader = 10;
+    // Signatures from validators
+    bytes SignedHeader = 10 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
 }
 
 // A payment between two sets of parties
