@@ -164,7 +164,8 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 // The input should prove the tx moved addr from Si to Sj,
 // Recreates the contract storage
 // executes move2 function in addr
-func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Address, blockRoot []byte, accountProof *iavl.RangeProof, account *acm.Account, storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
+func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Address, blockRoot []byte, accountProof *iavl.RangeProof,
+	account *acm.Account, storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
 
 	// TODO: StorageRoot does not work properly, have to encode
 	// the storage of each contract in a merkle-tree like thing

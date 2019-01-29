@@ -277,6 +277,7 @@ func TestMove2(t *testing.T) {
 
 	decodedAccount, err := acm.Decode(movedAccount)
 	stateHash := st.Hash()
+	commitNewBlock(st, exe.blockchain)
 
 	decodedAccount.Encode()
 
@@ -299,6 +300,9 @@ func TestMove2(t *testing.T) {
 	isCorrect = proof2.Verify(stateHash) == nil
 	require.Equal(t, isCorrect, true)
 
+	blk1, err := st.GetBlock(1)
+	fmt.Printf("Block: %v\n", blk1)
+
 	exe2 := makeExecutorWithGenesis(st2, testGenesisDoc2)
 
 	input = []byte{}
@@ -316,6 +320,7 @@ func TestMove2(t *testing.T) {
 		AccountProof:   accountProof,
 		MovedAccount:   decodedAccount,
 		StorageOpCodes: storageKeyValues,
+		// BlockHeader
 	}
 	err = exe2.signExecuteCommit(tx, chainID2, privAccounts2[0])
 	require.NoError(t, err)

@@ -2,6 +2,7 @@ package contexts
 
 import (
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 
@@ -204,7 +205,40 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	var exception errors.CodedError
 
 	if isMove2 {
-		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.BlockRoot, ctx.tx.AccountProof, ctx.tx.MovedAccount, ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
+		if ctx.tx.SignedHeader.Commit.Size() != ctx.Tip.NumValidators() {
+			return errors.ErrorInvalidProof
+		}
+
+		idx := 0
+		ctx.Tip.Validators().Iterate(func(id crypto.Addressable, power *big.Int) bool {
+			fmt.Printf("Validator: %v\n", id.GetPublicKey())
+			hash := ctx.tx.SignedHeader.Hash()
+			fmt.Printf("Validating: %x\n", hash)
+			err = id.GetPublicKey().VerifyBytes(hash, ctx.tx.SignedHeader.Commit.GetByIndex(idx).Signature)
+			if err != nil {
+				return true
+			}
+			idx++
+			return false
+		})
+
+		// ctx.tx.SignedHeader.Commit.
+		// ctx.Tip.Validators().Iterate(func(id crypto.Addressable, power *big.Int) bool {
+		// 	fmt.Printf("Validator: %v\n", id.GetPublicKey())
+		// 	fmt.Printf("Block root: %x\n", ctx.tx.BlockRoot)
+		// 	err = id.GetPublicKey().Verify(ctx.tx.BlockRoot, *ctx.tx.Signatures[nval])
+		// 	if err != nil {
+		// 		return true
+		// 	}
+		// 	nval++
+		// 	return false
+		// })
+		// if nval != ctx.Tip.NumValidators() {
+		// 	return errors.ErrorInvalidProof
+		// }
+
+		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.SignedHeader.AppHash, ctx.tx.AccountProof, ctx.tx.MovedAccount,
+			ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
 	} else {
 		ret, exception = vmach.Call(txCache, ctx.txe, caller, callee, code, ctx.tx.Data, value, &gas)
 	}
