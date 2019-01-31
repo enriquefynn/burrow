@@ -9,6 +9,7 @@ import (
 
 	"reflect"
 
+	"github.com/sirupsen/logrus"
 	hex "github.com/tmthrgd/go-hex"
 
 	"github.com/hyperledger/burrow/acm"
@@ -32,6 +33,7 @@ import (
 
 type Client struct {
 	MempoolSigning    bool
+	LocalSigning      bool
 	ChainAddress      string
 	KeysClientAddress string
 	// Memoised clients and info
@@ -44,12 +46,20 @@ type Client struct {
 	AllSpecs              *abi.AbiSpec
 }
 
-func NewClient(chain, keysClientAddress string, mempoolSigning bool, timeout time.Duration) *Client {
-	client := Client{
-		ChainAddress:      chain,
-		MempoolSigning:    mempoolSigning,
-		KeysClientAddress: keysClientAddress,
-		timeout:           timeout,
+func NewClient(chainURL, keysClientAddress string, mempoolSigning bool, timeout time.Duration) *Client {
+	client := Client{ChainAddress: chainURL, MempoolSigning: mempoolSigning, KeysClientAddress: keysClientAddress, timeout: timeout, LocalSigning: false}
+	err := client.dial()
+	if err != nil {
+		fmt.Printf("Error dialing: %v", err)
+	}
+	return &client
+}
+
+func NewClientWithLocalSigning(chainURL string, timeout time.Duration, signers []acm.AddressableSigner) *Client {
+	client := Client{ChainAddress: chainURL, LocalSigning: true, signersClient: signers, MempoolSigning: false, timeout: timeout}
+	err := client.dial()
+	if err != nil {
+		fmt.Printf("Error dialing: %v", err)
 	}
 	return &client
 }
@@ -64,8 +74,10 @@ func (c *Client) dial(logger *logging.Logger) error {
 		c.transactClient = rpctransact.NewTransactClient(conn)
 		c.queryClient = rpcquery.NewQueryClient(conn)
 		c.executionEventsClient = rpcevents.NewExecutionEventsClient(conn)
-		if c.KeysClientAddress == "" {
-			logger.InfoMsg("Using mempool signing since no keyClient set, pass --keys to sign locally or elsewhere")
+		if c.LocalSigning {
+			logrus.Info("Using local signing")
+		} else if c.KeysClientAddress == "" {
+			logrus.Info("Using mempool signing since no keyClient set, pass --keys to sign locally or elsewhere")
 			c.MempoolSigning = true
 			c.keyClient, err = keys.NewRemoteKeyClient(c.ChainAddress, logger)
 		} else {
@@ -217,6 +229,13 @@ func (c *Client) SignTx(tx payload.Payload, logger *logging.Logger) (*txs.Envelo
 	txEnv := txs.Enclose(c.chainID, tx)
 	if c.MempoolSigning {
 		logger.InfoMsg("Using mempool signing")
+		return txEnv, nil
+	} else if c.LocalSigning {
+		logrus.Info("Using local signer")
+		err = txEnv.Sign(c.signersClient...)
+		if err != nil {
+			return nil, err
+		}
 		return txEnv, nil
 	}
 	inputs := tx.GetInputs()
