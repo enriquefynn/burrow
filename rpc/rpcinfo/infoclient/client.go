@@ -101,6 +101,15 @@ func Block(client RPCClient, height int) (*rpc.ResultBlock, error) {
 	return res, nil
 }
 
+func SignedHeader(client RPCClient, height int) (*rpc.SignedBlockHeader, error) {
+	res := new(rpc.SignedBlockHeader)
+	_, err := client.Call(rpcinfo.SignedHeader, pmap("height", height), res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 func UnconfirmedTxs(client RPCClient, maxTxs int) (*rpc.ResultUnconfirmedTxs, error) {
 	res := new(rpc.ResultUnconfirmedTxs)
 	_, err := client.Call(rpcinfo.UnconfirmedTxs, pmap("maxTxs", maxTxs), res)

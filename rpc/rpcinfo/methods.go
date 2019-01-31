@@ -30,10 +30,11 @@ const (
 	Names = "names"
 
 	// Blockchain
-	Genesis = "genesis"
-	ChainID = "chain_id"
-	Block   = "block"
-	Blocks  = "blocks"
+	Genesis      = "genesis"
+	ChainID      = "chain_id"
+	Block        = "block"
+	Blocks       = "blocks"
+	SignedHeader = "signed_header"
 
 	// Consensus
 	UnconfirmedTxs = "unconfirmed_txs"
@@ -62,10 +63,11 @@ func GetRoutes(service *rpc.Service, logger *logging.Logger) map[string]*server.
 		AccountStats:    server.NewRPCFunc(service.AccountStats, ""),
 
 		// Blockchain
-		Genesis: server.NewRPCFunc(service.Genesis, ""),
-		ChainID: server.NewRPCFunc(service.ChainIdentifiers, ""),
-		Blocks:  server.NewRPCFunc(service.Blocks, "minHeight,maxHeight"),
-		Block:   server.NewRPCFunc(service.Block, "height"),
+		Genesis:      server.NewRPCFunc(service.Genesis, ""),
+		ChainID:      server.NewRPCFunc(service.ChainIdentifiers, ""),
+		Blocks:       server.NewRPCFunc(service.Blocks, "minHeight,maxHeight"),
+		Block:        server.NewRPCFunc(service.Block, "height"),
+		SignedHeader: server.NewRPCFunc(service.SignedHeader, "height"),
 
 		// Consensus
 		UnconfirmedTxs: server.NewRPCFunc(service.UnconfirmedTxs, "maxTxs"),

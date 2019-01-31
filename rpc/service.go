@@ -290,6 +290,13 @@ func (s *Service) Block(height uint64) (*ResultBlock, error) {
 	}, nil
 }
 
+func (s *Service) SignedHeader(height uint64) (*SignedBlockHeader, error) {
+	return &SignedBlockHeader{
+		BlockMeta: &BlockMeta{s.nodeView.BlockStore().LoadBlockMeta(int64(height))},
+		Commit:    s.nodeView.BlockStore().LoadBlockCommit(int64(height)),
+	}, nil
+}
+
 // Returns the current blockchain height and metadata for a range of blocks
 // between minHeight and maxHeight. Only returns maxBlockLookback block metadata
 // from the top of the range of blocks.

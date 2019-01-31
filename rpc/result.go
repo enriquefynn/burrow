@@ -73,6 +73,11 @@ type BlockMeta struct {
 	*tmTypes.BlockMeta
 }
 
+type SignedBlockHeader struct {
+	BlockMeta *BlockMeta
+	Commit    *tmTypes.Commit
+}
+
 func (bm BlockMeta) MarshalJSON() ([]byte, error) {
 	return aminoCodec.MarshalJSON(bm.BlockMeta)
 }
