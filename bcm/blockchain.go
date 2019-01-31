@@ -17,6 +17,7 @@ package bcm
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -34,6 +35,7 @@ type BlockchainInfo interface {
 	GenesisHash() []byte
 	GenesisDoc() genesis.GenesisDoc
 	ChainID() string
+	ShardID() uint64
 	LastBlockHeight() uint64
 	LastBlockTime() time.Time
 	LastCommitTime() time.Time
@@ -52,6 +54,7 @@ type Blockchain struct {
 	genesisHash           []byte
 	genesisDoc            genesis.GenesisDoc
 	chainID               string
+	shardID               uint64
 	lastBlockHeight       uint64
 	lastBlockTime         time.Time
 	lastBlockHash         []byte
@@ -95,11 +98,13 @@ func LoadOrNewBlockchain(db dbm.DB, genesisDoc *genesis.GenesisDoc, logger *logg
 
 // NewBlockchain returns a pointer to blockchain state initialised from genesis
 func NewBlockchain(db dbm.DB, genesisDoc *genesis.GenesisDoc) *Blockchain {
+	shardID, _ := strconv.ParseUint(genesisDoc.ChainID(), 10, 64)
 	bc := &Blockchain{
 		db:                    db,
 		genesisHash:           genesisDoc.Hash(),
 		genesisDoc:            *genesisDoc,
 		chainID:               genesisDoc.ChainID(),
+		shardID:               shardID,
 		lastBlockTime:         genesisDoc.GenesisTime,
 		appHashAfterLastBlock: genesisDoc.Hash(),
 	}
@@ -210,6 +215,10 @@ func (bc *Blockchain) GenesisDoc() genesis.GenesisDoc {
 
 func (bc *Blockchain) ChainID() string {
 	return bc.chainID
+}
+
+func (bc *Blockchain) ShardID() uint64 {
+	return bc.shardID
 }
 
 func (bc *Blockchain) LastBlockHeight() uint64 {

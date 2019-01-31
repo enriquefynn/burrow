@@ -113,7 +113,8 @@ func (genesisDoc *GenesisDoc) ShortHash() []byte {
 }
 
 func (genesisDoc *GenesisDoc) ChainID() string {
-	return fmt.Sprintf("%s-%X", genesisDoc.ChainName, genesisDoc.ShortHash())
+	return genesisDoc.ChainName
+	// return fmt.Sprintf("%s-%X", genesisDoc.ChainName, genesisDoc.ShortHash())
 }
 
 //------------------------------------------------------------
