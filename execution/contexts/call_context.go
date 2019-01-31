@@ -3,8 +3,8 @@ package contexts
 import (
 	"fmt"
 	"math/big"
-	"strconv"
-	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/hyperledger/burrow/crypto"
 
@@ -126,10 +126,12 @@ func (ctx *CallContext) Check(inAcc *acm.Account, value uint64) error {
 }
 
 func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error {
-	shardID, err := strconv.ParseUint(strings.Split(ctx.Tip.ChainID(), "-")[0], 10, 64)
-	if err != nil {
-		return err
+	logrus.Info("Calling method\n")
+	shardID := ctx.Tip.ShardID()
+	if inAcc.ShardID != ctx.Tip.ShardID() {
+		return errors.ErrorCodeWrongShardExecution
 	}
+
 	createContract := false
 	isMove2 := ctx.tx.BlockRoot != nil
 	if !isMove2 {
@@ -214,7 +216,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 			fmt.Printf("Validator: %v\n", id.GetPublicKey())
 			hash := ctx.tx.SignedHeader.Hash()
 			fmt.Printf("Validating: %x\n", hash)
-			err = id.GetPublicKey().VerifyBytes(hash, ctx.tx.SignedHeader.Commit.GetByIndex(idx).Signature)
+			err := id.GetPublicKey().VerifyBytes(hash, ctx.tx.SignedHeader.Commit.GetByIndex(idx).Signature)
 			if err != nil {
 				return true
 			}

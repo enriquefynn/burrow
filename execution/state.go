@@ -17,6 +17,7 @@ package execution
 import (
 	"crypto/sha256"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/hyperledger/burrow/txs/payload"
@@ -130,6 +131,10 @@ func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error)
 	}
 
 	s := NewState(db)
+	shardID, err := strconv.ParseUint(genesisDoc.ChainID(), 10, 64)
+	if err != nil {
+		return nil, err
+	}
 
 	// Make accounts state tree
 	for _, genAcc := range genesisDoc.Accounts {
@@ -138,7 +143,7 @@ func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error)
 			Address:     genAcc.Address,
 			Balance:     genAcc.Amount,
 			Permissions: perm,
-			// TODO ShardID?
+			ShardID:     shardID,
 		}
 		err := s.writeState.UpdateAccount(acc)
 		if err != nil {
@@ -159,7 +164,7 @@ func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error)
 		Balance:     1337,
 		Permissions: globalPerms,
 	}
-	err := s.writeState.UpdateAccount(permsAcc)
+	err = s.writeState.UpdateAccount(permsAcc)
 	if err != nil {
 		return nil, err
 	}
