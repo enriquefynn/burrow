@@ -52,9 +52,8 @@ var (
 	// Directly referenced values
 	accountKeyFormat = storage.NewMustKeyFormat("a", crypto.AddressLength)
 	// storageKeyFormat     = storage.NewMustKeyFormat("s", crypto.AddressLength, binary.Word256Length)
-	nameKeyFormat        = storage.NewMustKeyFormat("n", storage.VariadicSegmentLength)
-	proposalKeyFormat    = storage.NewMustKeyFormat("p", sha256.Size)
-	accountKeyHashFormat = storage.NewMustKeyFormat("h", crypto.AddressLength)
+	nameKeyFormat     = storage.NewMustKeyFormat("n", storage.VariadicSegmentLength)
+	proposalKeyFormat = storage.NewMustKeyFormat("p", sha256.Size)
 
 	// Keys that reference references
 	blockRefKeyFormat = storage.NewMustKeyFormat("b", uint64Length)
