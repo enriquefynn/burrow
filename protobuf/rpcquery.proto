@@ -12,6 +12,7 @@ import "acm.proto";
 import "validator.proto";
 import "rpc.proto";
 import "payload.proto";
+import "rpcevents.proto";
 
 option (gogoproto.marshaler_all) = true;
 option (gogoproto.unmarshaler_all) = true;
@@ -37,7 +38,11 @@ service Query {
 
     rpc GetStats(GetStatsParam) returns (Stats);
 
-    rpc GetBlockHeader(GetBlockParam) returns (types.Header);
+    rpc ListSignedHeaders(rpcevents.BlocksRequest) returns (stream SignedHeadersResult);
+}
+
+message SignedHeadersResult {
+    bytes SignedHeader = 1 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
 }
 
 message StatusParam {
