@@ -200,7 +200,7 @@ func (qs *queryServer) streamSignedHeaders(ctx context.Context, blockRange *rpce
 	// Pull blocks from state and receive the upper bound (exclusive) on the what we were able to send
 	// Set this to start since it will be the start of next streaming batch (if needed)
 	// TODO
-	// start, err := qs.iterateBlocks(start, end, consumer)
+	start, err := qs.iterateSignedHeaders(start, end, consumer)
 
 	// If we are not streaming and all blocks requested were retrieved from state then we are done
 	// TODO
@@ -236,11 +236,10 @@ func (qs *queryServer) streamSignedHeaders(ctx context.Context, blockRange *rpce
 				// we have not emitted so we will pull them from state. This can occur if a block is emitted during/after
 				// the initial streaming but before we have subscribed to block events or if we spill BlockExecutions
 				// when streaming them and need to catch up
-				// TODO
-				// _, err := ees.iterateBlocks(start, streamEnd, consumer)
-				// if err != nil {
-				// 	return err
-				// }
+				_, err := qs.iterateSignedHeaders(start, streamEnd, consumer)
+				if err != nil {
+					return err
+				}
 			}
 			if finished {
 				return nil
@@ -251,10 +250,10 @@ func (qs *queryServer) streamSignedHeaders(ctx context.Context, blockRange *rpce
 				Commit: commit,
 				Header: &header,
 			}
-			signedHeaderResult := SignedHeadersResult{
+			signedHeadersResult := SignedHeadersResult{
 				SignedHeader: &signedHeader,
 			}
-			err = consumer(&signedHeaderResult)
+			err = consumer(&signedHeadersResult)
 			if err != nil {
 				return err
 			}
@@ -264,4 +263,28 @@ func (qs *queryServer) streamSignedHeaders(ctx context.Context, blockRange *rpce
 	}
 
 	return nil
+}
+
+func (qs *queryServer) iterateSignedHeaders(start, end uint64, consumer func(*SignedHeadersResult) error) (uint64, error) {
+	var streamErr error
+
+	for height := start + 1; height < end-1; height++ {
+		fmt.Printf("end: %v\n", end)
+		commit := qs.nodeView.BlockStore().LoadBlockCommit(int64(height))
+		header := qs.nodeView.BlockStore().LoadBlockMeta(int64(height)).Header
+		signedHeader := types.SignedHeader{
+			Commit: commit,
+			Header: &header,
+		}
+		signedHeadersResult := SignedHeadersResult{
+			SignedHeader: &signedHeader,
+		}
+		streamErr = consumer(&signedHeadersResult)
+	}
+
+	if streamErr != nil {
+		return 0, streamErr
+	}
+	// Returns the appropriate starting block for the next stream
+	return end + 1, nil
 }

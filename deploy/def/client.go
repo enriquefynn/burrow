@@ -253,6 +253,16 @@ func (c *Client) SignTx(tx payload.Payload, logger *logging.Logger) (*txs.Envelo
 	return txEnv, nil
 }
 
+func (c *Client) SignTxOnBehalfOf(tx payload.Payload, signersClient []acm.AddressableSigner) (*txs.Envelope, error) {
+	txEnv := txs.Enclose(c.chainID, tx)
+	logrus.Info("Signing on behalf of user")
+	err := txEnv.Sign(c.signersClient...)
+	if err != nil {
+		return nil, err
+	}
+	return txEnv, nil
+}
+
 // Creates a keypair using attached keys service
 func (c *Client) CreateKey(keyName, curveTypeString string, logger *logging.Logger) (crypto.PublicKey, error) {
 	err := c.dial(logger)
