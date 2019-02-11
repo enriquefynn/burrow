@@ -126,7 +126,6 @@ func (ctx *CallContext) Check(inAcc *acm.Account, value uint64) error {
 }
 
 func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error {
-	logrus.Info("Calling method\n")
 	shardID := ctx.Tip.ShardID()
 
 	if !inAcc.Address.Word256().IsZero() && inAcc.ShardID != ctx.Tip.ShardID() {

@@ -269,7 +269,6 @@ func (qs *queryServer) iterateSignedHeaders(start, end uint64, consumer func(*Si
 	var streamErr error
 
 	for height := start + 1; height < end-1; height++ {
-		fmt.Printf("end: %v\n", end)
 		commit := qs.nodeView.BlockStore().LoadBlockCommit(int64(height))
 		header := qs.nodeView.BlockStore().LoadBlockMeta(int64(height)).Header
 		signedHeader := types.SignedHeader{

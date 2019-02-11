@@ -255,8 +255,7 @@ func (c *Client) SignTx(tx payload.Payload, logger *logging.Logger) (*txs.Envelo
 
 func (c *Client) SignTxOnBehalfOf(tx payload.Payload, signersClient []acm.AddressableSigner) (*txs.Envelope, error) {
 	txEnv := txs.Enclose(c.chainID, tx)
-	logrus.Info("Signing on behalf of user")
-	err := txEnv.Sign(c.signersClient...)
+	err := txEnv.Sign(signersClient...)
 	if err != nil {
 		return nil, err
 	}
