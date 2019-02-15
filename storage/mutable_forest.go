@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 
+	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
@@ -140,6 +141,11 @@ func (muf *MutableForest) Delete(prefix []byte) (*CommitID, error) {
 // Get the current global hash for all trees in this forest
 func (muf *MutableForest) Hash() []byte {
 	return muf.commitsTree.Hash()
+}
+
+// Get proof of a commited state
+func (imf *MutableForest) GetCommitProof(prefix []byte) ([]byte, *iavl.RangeProof, error) {
+	return imf.commitsTree.GetWithProof(prefix)
 }
 
 // Get the current global version for all versions of all trees in this forest

@@ -17,7 +17,11 @@ package state
 import (
 	"crypto/sha256"
 	"fmt"
+	"reflect"
+	"strconv"
 	"sync"
+
+	"github.com/tendermint/iavl"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/acm/acmstate"
@@ -30,6 +34,7 @@ import (
 	"github.com/hyperledger/burrow/genesis"
 	"github.com/hyperledger/burrow/logging"
 	"github.com/hyperledger/burrow/permission"
+	"github.com/hyperledger/burrow/proofs"
 	"github.com/hyperledger/burrow/storage"
 	"github.com/hyperledger/burrow/txs"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -132,6 +137,10 @@ func NewState(db dbm.DB) *State {
 // Make genesis state from GenesisDoc and save to DB
 func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error) {
 	s := NewState(db)
+	shardID, err := strconv.ParseUint(genesisDoc.ChainID(), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("Chain name should be a number %v", err)
+	}
 
 	const errHeader = "MakeGenesisState():"
 	// Make accounts state tree
@@ -141,6 +150,7 @@ func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error)
 			Address:     genAcc.Address,
 			Balance:     genAcc.Amount,
 			Permissions: perm,
+			ShardID:     shardID,
 		}
 		err := s.writeState.UpdateAccount(acc)
 		if err != nil {
@@ -148,7 +158,7 @@ func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error)
 		}
 	}
 	// Make genesis validators
-	err := s.writeState.MakeGenesisValidators(genesisDoc)
+	err = s.writeState.MakeGenesisValidators(genesisDoc)
 	if err != nil {
 		return nil, fmt.Errorf("%s %v", errHeader, err)
 	}
@@ -164,6 +174,7 @@ func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error)
 		Address:     acm.GlobalPermissionsAddress,
 		Balance:     1337,
 		Permissions: globalPerms,
+		ShardID:     shardID,
 	}
 	err = s.writeState.UpdateAccount(permsAcc)
 	if err != nil {
@@ -294,4 +305,38 @@ func (s *State) Copy(db dbm.DB) (*State, error) {
 
 func (s *State) SetLogger(logger *logging.Logger) {
 	s.logger = logger
+}
+
+func (s *State) GetKeyFormat() KeyFormatStore {
+	return keys
+}
+
+// GetKeyWithProof returns the data plus a proof of its inclusion in the tree
+func (s *State) GetKeyWithProof(prefix []byte, address crypto.Address) (*proofs.Proof, error) {
+	var commitPrefix []byte
+	if reflect.DeepEqual(prefix, keys.Account.Key()) {
+		commitPrefix = keys.Account.Prefix()
+	} else {
+		commitPrefix = keys.Storage.Key(address)
+	}
+	var dataKey []byte
+	var dataProof *iavl.RangeProof
+	commit, commitProof, err := s.writeState.forest.GetCommitProof(commitPrefix)
+	// fmt.Printf("Dump: %v\n", s.writeState.forest.Dump())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if reflect.DeepEqual(prefix, keys.Account.Key()) {
+		tree, err := s.Forest.Reader(commitPrefix)
+		if err != nil {
+			return nil, err
+		}
+		dataKey, dataProof, err = tree.GetWithProof(address.Bytes())
+		if err != nil {
+			return nil, err
+		}
+	}
+	return proofs.NewProof(commitProof, dataProof, commit, dataKey), nil
 }

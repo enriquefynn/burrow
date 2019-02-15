@@ -36,6 +36,7 @@ type BlockchainInfo interface {
 	GenesisDoc() genesis.GenesisDoc
 	ChainID() string
 	ShardID() uint64
+	Validators() []genesis.Validator
 	LastBlockHeight() uint64
 	LastBlockTime() time.Time
 	LastCommitTime() time.Time
@@ -219,6 +220,10 @@ func (bc *Blockchain) ChainID() string {
 
 func (bc *Blockchain) ShardID() uint64 {
 	return bc.shardID
+}
+
+func (bc *Blockchain) Validators() []genesis.Validator {
+	return bc.genesisDoc.Validators
 }
 
 func (bc *Blockchain) LastBlockHeight() uint64 {

@@ -2,11 +2,9 @@ package contexts
 
 import (
 	"fmt"
-	"math/big"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/hyperledger/burrow/crypto"
+	"github.com/sirupsen/logrus"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/acm/acmstate"
@@ -126,15 +124,15 @@ func (ctx *CallContext) Check(inAcc *acm.Account, value uint64) error {
 }
 
 func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error {
-	shardID := ctx.Tip.ShardID()
+	shardID := ctx.Blockchain.ShardID()
 
-	if !inAcc.Address.Word256().IsZero() && inAcc.ShardID != ctx.Tip.ShardID() {
+	if inAcc.ShardID != shardID && !inAcc.Address.Word256().IsZero() {
 		logrus.Infof("In acc: %v out acc: %v", inAcc.Address, outAcc.Address)
 		return errors.ErrorCodeWrongShardExecution
 	}
 
 	createContract := false
-	isMove2 := ctx.tx.BlockRoot != nil
+	isMove2 := ctx.tx.AccountProof != nil
 	if !isMove2 {
 		createContract = ctx.tx.Address == nil
 	}
@@ -208,22 +206,31 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	var exception errors.CodedError
 
 	if isMove2 {
-		if ctx.tx.SignedHeader.Commit.Size() != ctx.Tip.NumValidators() {
-			return errors.ErrorInvalidProof
-		}
+		// validators := ctx.Blockchain.Validators()
+		// if ctx.tx.SignedHeader.Commit.Size() != len(validators) {
+		// 	return errors.ErrorInvalidProof
+		// }
 
-		idx := 0
-		ctx.Tip.Validators().Iterate(func(id crypto.Addressable, power *big.Int) bool {
-			fmt.Printf("Validator: %v\n", id.GetPublicKey())
-			hash := ctx.tx.SignedHeader.Hash()
-			fmt.Printf("Validating: %x\n", hash)
-			err := id.GetPublicKey().VerifyBytes(hash, ctx.tx.SignedHeader.Commit.GetByIndex(idx).Signature)
-			if err != nil {
-				return true
-			}
-			idx++
-			return false
-		})
+		// for idx, validator := range validators {
+		// 	hash := ctx.tx.SignedHeader.Hash()
+		// 	fmt.Printf("Validating: %x\n", hash)
+		// 	err := validator.PublicKey.VerifyBytes(hash, ctx.tx.SignedHeader.Commit.GetByIndex(idx).Signature)
+		// 	if err != nil {
+		// 		return errors.ErrorInvalidProof
+		// 	}
+		// }
+
+		// ctx.Tip.Validators().Iterate(func(id crypto.Addressable, power *big.Int) bool {
+		// 	fmt.Printf("Validator: %v\n", id.GetPublicKey())
+		// 	hash := ctx.tx.SignedHeader.Hash()
+		// 	fmt.Printf("Validating: %x\n", hash)
+		// 	err := id.GetPublicKey().VerifyBytes(hash, ctx.tx.SignedHeader.Commit.GetByIndex(idx).Signature)
+		// 	if err != nil {
+		// 		return true
+		// 	}
+		// 	idx++
+		// 	return false
+		// })
 
 		// ctx.tx.SignedHeader.Commit.
 		// ctx.Tip.Validators().Iterate(func(id crypto.Addressable, power *big.Int) bool {
@@ -240,8 +247,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 		// 	return errors.ErrorInvalidProof
 		// }
 
-		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.SignedHeader.AppHash, ctx.tx.AccountProof, ctx.tx.MovedAccount,
-			ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
+		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.AccountProof, ctx.tx.StorageProof, ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
 	} else {
 		ret, exception = vmach.Call(txCache, ctx.txe, caller, callee, code, ctx.tx.Data, value, &gas)
 	}

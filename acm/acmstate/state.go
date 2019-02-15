@@ -5,7 +5,6 @@ import (
 	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/crypto"
 	"github.com/hyperledger/burrow/permission"
-	"github.com/tendermint/iavl"
 )
 
 type AccountGetter interface {
@@ -32,7 +31,6 @@ type StorageGetter interface {
 	// Retrieve a 32-byte value stored at key for the account at address, return Zero256 if key does not exist but
 	// error if address does not
 	GetStorage(address crypto.Address, key binary.Word256) (value binary.Word256, err error)
-	GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error)
 }
 
 type StorageSetter interface {

@@ -1,6 +1,8 @@
 package storage
 
-import "github.com/tendermint/iavl"
+import (
+	"github.com/tendermint/iavl"
+)
 
 // We wrap IAVL's tree types in order to provide iteration helpers and to harmonise other interface types with what we
 // expect

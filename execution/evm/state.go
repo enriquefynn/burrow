@@ -33,7 +33,6 @@ type Reader interface {
 	// GetBlockHash returns	hash of the specific block
 	GetBlockHash(blockNumber uint64) (binary.Word256, error)
 	GetShardID(address crypto.Address) uint64
-	GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error)
 }
 
 type Writer interface {
@@ -88,10 +87,6 @@ func (st *State) Sync() errors.CodedError {
 		return errors.AsException(err)
 	}
 	return nil
-}
-
-func (st *State) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
-	return st.backend.GetAccountWithProof(address)
 }
 
 func (st *State) Error() errors.CodedError {

@@ -20,7 +20,6 @@ import (
 	"sync"
 
 	"github.com/hyperledger/burrow/execution/errors"
-	"github.com/tendermint/iavl"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/binary"
@@ -183,10 +182,6 @@ func (cache *Cache) SetStorage(address crypto.Address, key binary.Word256, value
 	accInfo.storage[key] = value
 	accInfo.updated = true
 	return nil
-}
-
-func (cache *Cache) GetAccountWithProof(address crypto.Address) ([]byte, *iavl.RangeProof, error) {
-	return nil, nil, nil
 }
 
 // Iterates over all cached storage items first in cache and then in backend until consumer returns true for 'stop'

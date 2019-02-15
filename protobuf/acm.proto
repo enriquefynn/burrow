@@ -24,5 +24,4 @@ message Account {
     bytes Code = 5 [(gogoproto.customtype) = "Bytecode", (gogoproto.nullable) = false];
     permission.AccountPermissions Permissions = 6 [(gogoproto.nullable) = false];
     uint64 ShardID = 7;
-    bytes StorageRoot = 8;
 }

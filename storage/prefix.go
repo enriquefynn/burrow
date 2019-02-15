@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 
+	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	hex "github.com/tmthrgd/go-hex"
 )
@@ -209,6 +210,14 @@ func (ps *prefixKVStore) Get(key []byte) []byte {
 
 func (ps *prefixKVStore) Has(key []byte) bool {
 	return ps.source.Has(ps.prefix.Key(key))
+}
+
+func (ps *prefixKVStore) GetWithProof(key []byte) ([]byte, *iavl.RangeProof, error) {
+	return ps.source.GetWithProof(ps.prefix.Key(key))
+}
+
+func (ps *prefixKVStore) Hash() []byte {
+	return ps.source.Hash()
 }
 
 func (ps *prefixKVStore) Set(key, value []byte) {

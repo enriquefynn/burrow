@@ -6,7 +6,6 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 import "permission.proto";
 import "spec.proto";
-import "acm.proto";
 
 package payload;
 
@@ -69,17 +68,15 @@ message CallTx {
     uint64 Fee = 4;
     // EVM bytecode payload
     bytes Data = 5 [(gogoproto.customtype) = "github.com/hyperledger/burrow/binary.HexBytes", (gogoproto.nullable) = false];
-
-    // Account to use when moving
-    acm.Account MovedAccount = 6;
-    // Proof that account was indeed moved 
-    bytes AccountProof = 7 [(gogoproto.customtype) = "github.com/tendermint/iavl.RangeProof"];
+    // For MOVE
+    // Proof that account was indeed moved
+    bytes AccountProof = 6 [(gogoproto.customtype) = "github.com/hyperledger/burrow/proofs.Proof"];
+    // Proof that account has storage
+    bytes StorageProof = 7 [(gogoproto.customtype) = "github.com/hyperledger/burrow/proofs.Proof"];
     // List of storageOpcodes
     bytes StorageOpCodes = 8;
-    // BlockRoot to verify from
-    bytes BlockRoot = 9;
     // Signatures from validators
-    bytes SignedHeader = 10 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
+    bytes SignedHeader = 9 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
 }
 
 // A payment between two sets of parties

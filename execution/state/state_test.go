@@ -86,15 +86,15 @@ func TestWriteState_AddBlock(t *testing.T) {
 	require.Equal(t, numTxs, uint64(len(txExecutions)))
 }
 
-func newParams(shardID uint64) evm.Params {
-	return evm.Params{
-		BlockHeight: 0,
-		BlockHash:   binary.Zero256,
-		BlockTime:   0,
-		GasLimit:    0,
-		ShardID:     shardID,
-	}
-}
+// func newParams(shardID uint64) evm.Params {
+// 	return evm.Params{
+// 		BlockHeight: 0,
+// 		BlockHash:   binary.Zero256,
+// 		BlockTime:   0,
+// 		GasLimit:    0,
+// 		ShardID:     shardID,
+// 	}
+// }
 
 func Test1(t *testing.T) {
 	var shardID1 uint64 = 1
@@ -137,7 +137,7 @@ func Test1(t *testing.T) {
 	shardIDToMove := binary.Int64ToWord256(2)
 	input = append(input, shardIDToMove.Bytes()...)
 
-	exe := makeExecutorWithGenesis(st, testGenesisDoc)
+	exe := execution.makeExecutorWithGenesis(st, testGenesisDoc)
 
 	tx, _ := payload.NewCallTx(exe.stateCache, privAccounts[0].GetPublicKey(), nil, code, 1, 100000, 1)
 	err = exe.signExecuteCommit(tx, chainID1, privAccounts[0])
@@ -176,14 +176,14 @@ func TestMove2(t *testing.T) {
 	chainID1 := strconv.Itoa(int(shardID1))
 	chainID2 := strconv.Itoa(int(shardID2))
 
-	st, privAccounts := makeGenesisState(3, true, 1000, 1, true, 1000, shardID1)
-	st2, privAccounts2 := makeGenesisState(3, true, 1000, 1, true, 1000, shardID2)
+	// st, privAccounts := makeGenesisState(3, true, 1000, 1, true, 1000, shardID1)
+	// st2, privAccounts2 := makeGenesisState(3, true, 1000, 1, true, 1000, shardID2)
 
-	acc02 := getAccount(st2, privAccounts2[0].GetAddress())
-	acc02.Balance = 10000000
+	// acc02 := getAccount(st2, privAccounts2[0].GetAddress())
+	// acc02.Balance = 10000000
 
-	acc0 := getAccount(st, privAccounts[0].GetAddress())
-	acc0.Balance = 10000000
+	// acc0 := getAccount(st, privAccounts[0].GetAddress())
+	// acc0.Balance = 10000000
 
 	/*
 		pragma solidity >0.4.25;

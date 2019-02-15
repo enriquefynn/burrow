@@ -141,7 +141,7 @@ func TestSendFails(t *testing.T) {
 	require.NoError(t, err)
 	err = st.InitialCommit()
 	require.NoError(t, err)
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 
 	//-------------------
 	// send txs
@@ -200,7 +200,7 @@ func TestName(t *testing.T) {
 	require.NoError(t, err)
 	err = st.InitialCommit()
 	require.NoError(t, err)
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 
 	//-------------------
 	// name txs
@@ -234,7 +234,7 @@ func TestCallFails(t *testing.T) {
 	require.NoError(t, err)
 	err = st.InitialCommit()
 	require.NoError(t, err)
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 
 	//-------------------
 	// call txs
@@ -290,7 +290,7 @@ func TestSendPermission(t *testing.T) {
 	require.NoError(t, err)
 	err = st.InitialCommit()
 	require.NoError(t, err)
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 
 	// A single input, having the permission, should succeed
 	tx := payload.NewSendTx()
@@ -320,7 +320,7 @@ func TestCallPermission(t *testing.T) {
 	require.NoError(t, err)
 	err = st.InitialCommit()
 	require.NoError(t, err)
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 
 	//------------------------------
 	// call to simple contract
@@ -331,10 +331,10 @@ func TestCallPermission(t *testing.T) {
 	simpleAcc := &acm.Account{
 		Address:     simpleContractAddr,
 		Balance:     0,
-		ShardID:     1,
 		Code:        []byte{0x60},
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
+		ShardID:     1,
 	}
 	exe.updateAccounts(t, simpleAcc)
 
@@ -353,10 +353,10 @@ func TestCallPermission(t *testing.T) {
 	caller1Acc := &acm.Account{
 		Address:     caller1ContractAddr,
 		Balance:     10000,
-		ShardID:     1,
 		Code:        contractCode,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
+		ShardID:     1,
 	}
 	exe.stateCache.UpdateAccount(caller1Acc)
 
@@ -395,10 +395,10 @@ func TestCallPermission(t *testing.T) {
 	caller2Acc := &acm.Account{
 		Address:     caller2ContractAddr,
 		Balance:     1000,
-		ShardID:     1,
 		Code:        contractCode2,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
+		ShardID:     1,
 	}
 	caller1Acc.Permissions.Base.Set(permission.Call, false)
 	caller2Acc.Permissions.Base.Set(permission.Call, true)
@@ -441,7 +441,7 @@ func TestCreatePermission(t *testing.T) {
 	require.NoError(t, err)
 	err = st.InitialCommit()
 	require.NoError(t, err)
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 
 	//------------------------------
 	// create a simple contract
@@ -525,10 +525,10 @@ func TestCreatePermission(t *testing.T) {
 	contractAcc = &acm.Account{
 		Address:     contractAddr,
 		Balance:     1000,
-		ShardID:     1,
 		Code:        code,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
+		ShardID:     1,
 	}
 	contractAcc.Permissions.Base.Set(permission.Call, true)
 	contractAcc.Permissions.Base.Set(permission.CreateContract, true)
@@ -560,7 +560,7 @@ func TestCreateAccountPermission(t *testing.T) {
 	require.NoError(t, err)
 	err = st.InitialCommit()
 	require.NoError(t, err)
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 
 	//----------------------------------------------------------
 	// SendTx to unknown account
@@ -641,10 +641,10 @@ func TestCreateAccountPermission(t *testing.T) {
 	caller1Acc := &acm.Account{
 		Address:     caller1ContractAddr,
 		Balance:     0,
-		ShardID:     1,
 		Code:        contractCode,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
+		ShardID:     1,
 	}
 	err = exe.stateCache.UpdateAccount(caller1Acc)
 	require.NoError(t, err)
@@ -698,7 +698,7 @@ func TestSNativeCALL(t *testing.T) {
 	require.NoError(t, err)
 	err = st.InitialCommit()
 	require.NoError(t, err)
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 
 	//----------------------------------------------------------
 	// Test CALL to SNative contracts
@@ -707,10 +707,10 @@ func TestSNativeCALL(t *testing.T) {
 	doug := &acm.Account{
 		Address:     DougAddress,
 		Balance:     0,
-		ShardID:     1,
 		Code:        nil,
 		Sequence:    0,
 		Permissions: permission.ZeroAccountPermissions,
+		ShardID:     1,
 	}
 
 	doug.Permissions.Base.Set(permission.Call, true)
@@ -842,7 +842,7 @@ func TestSNativeTx(t *testing.T) {
 	require.NoError(t, err)
 	err = st.InitialCommit()
 	require.NoError(t, err)
-	batchCommitter := makeExecutor(st)
+	batchCommitter := makeExecutor(st, testGenesisDoc)
 
 	//----------------------------------------------------------
 	// Test SNativeTx
@@ -953,7 +953,7 @@ func TestNameTxs(t *testing.T) {
 	require.NoError(t, err)
 
 	names.MinNameRegistrationPeriod = 5
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 	startingBlock := exe.Blockchain.LastBlockHeight()
 
 	// try some bad names. these should all fail
@@ -1143,7 +1143,7 @@ func TestCreates(t *testing.T) {
 	acc1 := getAccount(st, privAccounts[1].GetAddress())
 	acc2 := getAccount(st, privAccounts[2].GetAddress())
 
-	exe := makeExecutor(st)
+	exe := makeExecutor(st, testGenesisDoc)
 
 	newAcc1 := getAccount(st, acc1.Address)
 	newAcc1.Code = preFactoryCode
@@ -1296,7 +1296,7 @@ func TestMerklePanic(t *testing.T) {
 
 	// CallTx. Just runs through it and checks the transfer. See vm, rpc tests for more
 	{
-		stateCallTx := makeExecutor(copyState(t, st))
+		stateCallTx := makeExecutor(copyState(t, st), testGenesisDoc)
 		newAcc1 := getAccount(stateCallTx, acc1.Address)
 		newAcc1.Code = []byte{0x60}
 		err := stateCallTx.stateCache.UpdateAccount(newAcc1)
@@ -1588,8 +1588,8 @@ type testExecutor struct {
 	*bcm.Blockchain
 }
 
-func makeExecutor(state *state.State) *testExecutor {
-	blockchain := newBlockchain(testGenesisDoc)
+func makeExecutor(state *state.State, genesisDoc *genesis.GenesisDoc) *testExecutor {
+	blockchain := newBlockchain(genesisDoc)
 	blockchain.CommitBlockAtHeight(time.Now(), []byte("hashily"), state.Hash(), HeightAtVersion(state.Version()))
 	return &testExecutor{
 		Blockchain: blockchain,

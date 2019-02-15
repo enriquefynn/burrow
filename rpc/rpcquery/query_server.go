@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/burrow/acm"
+	"github.com/hyperledger/burrow/acm/acmstate"
 	"github.com/hyperledger/burrow/acm/validator"
 	"github.com/hyperledger/burrow/bcm"
 	"github.com/hyperledger/burrow/consensus/tendermint"
@@ -19,13 +20,15 @@ import (
 	rpcevents "github.com/hyperledger/burrow/rpc/rpcevents"
 	"github.com/hyperledger/burrow/txs/payload"
 	"github.com/tendermint/tendermint/abci/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type queryServer struct {
-	accounts     state.IterableStatsReader
+	accounts     acmstate.IterableStatsReader
 	nameReg      names.IterableReader
 	proposalReg  proposal.IterableReader
 	blockchain   bcm.BlockchainInfo
+	validators   validator.History
 	nodeView     *tendermint.NodeView
 	logger       *logging.Logger
 	subscribable event.Subscribable
@@ -33,13 +36,15 @@ type queryServer struct {
 
 var _ QueryServer = &queryServer{}
 
-func NewQueryServer(state state.IterableStatsReader, nameReg names.IterableReader, proposalReg proposal.IterableReader,
-	blockchain bcm.BlockchainInfo, nodeView *tendermint.NodeView, logger *logging.Logger, subscribable event.Subscribable) *queryServer {
+func NewQueryServer(state acmstate.IterableStatsReader, nameReg names.IterableReader, proposalReg proposal.IterableReader,
+	blockchain bcm.BlockchainInfo, validators validator.History, nodeView *tendermint.NodeView, logger *logging.Logger,
+	subscribable event.Subscribable) *queryServer {
 	return &queryServer{
 		accounts:     state,
 		nameReg:      nameReg,
 		proposalReg:  proposalReg,
 		blockchain:   blockchain,
+		validators:   validators,
 		nodeView:     nodeView,
 		logger:       logger,
 		subscribable: subscribable,
@@ -168,19 +173,6 @@ func (qs *queryServer) ListProposals(param *ListProposalsParam, stream Query_Lis
 	return streamErr
 }
 
-func (qs *queryServer) ListSignedHeaders(request *rpcevents.BlocksRequest, stream Query_ListSignedHeadersServer) error {
-	return qs.streamSignedHeaders(stream.Context(), request.BlockRange, func(signedHeaders *SignedHeadersResult) error {
-		if signedHeaders != nil {
-			// fmt.Printf("Signed HEADER: %v", signedHeader.Commit)
-			err := stream.SendMsg(signedHeaders)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-}
-
 func (qs *queryServer) GetStats(ctx context.Context, param *GetStatsParam) (*Stats, error) {
 	stats := qs.accounts.GetAccountStats()
 
@@ -246,7 +238,7 @@ func (qs *queryServer) streamSignedHeaders(ctx context.Context, blockRange *rpce
 			}
 			commit := qs.nodeView.BlockStore().LoadBlockCommit(int64(block.Height - 1))
 			header := qs.nodeView.BlockStore().LoadBlockMeta(int64(block.Height - 1)).Header
-			signedHeader := types.SignedHeader{
+			signedHeader := tmtypes.SignedHeader{
 				Commit: commit,
 				Header: &header,
 			}
@@ -271,7 +263,7 @@ func (qs *queryServer) iterateSignedHeaders(start, end uint64, consumer func(*Si
 	for height := start + 1; height < end-1; height++ {
 		commit := qs.nodeView.BlockStore().LoadBlockCommit(int64(height))
 		header := qs.nodeView.BlockStore().LoadBlockMeta(int64(height)).Header
-		signedHeader := types.SignedHeader{
+		signedHeader := tmtypes.SignedHeader{
 			Commit: commit,
 			Header: &header,
 		}
@@ -286,4 +278,28 @@ func (qs *queryServer) iterateSignedHeaders(start, end uint64, consumer func(*Si
 	}
 	// Returns the appropriate starting block for the next stream
 	return end + 1, nil
+}
+
+func (qs *queryServer) ListSignedHeaders(request *rpcevents.BlocksRequest, stream Query_ListSignedHeadersServer) error {
+	return qs.streamSignedHeaders(stream.Context(), request.BlockRange, func(signedHeaders *SignedHeadersResult) error {
+		if signedHeaders != nil {
+			// fmt.Printf("Signed HEADER: %v", signedHeader.Commit)
+			err := stream.SendMsg(signedHeaders)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// Tendermint and blocks
+
+func (qs *queryServer) GetBlockHeader(ctx context.Context, param *GetBlockParam) (*types.Header, error) {
+	header, err := qs.blockchain.GetBlockHeader(param.Height)
+	if err != nil {
+		return nil, err
+	}
+	abciHeader := tmtypes.TM2PB.Header(header)
+	return &abciHeader, nil
 }

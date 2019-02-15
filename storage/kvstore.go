@@ -3,6 +3,8 @@ package storage
 import (
 	"bytes"
 
+	"github.com/tendermint/iavl"
+
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
@@ -49,6 +51,9 @@ type KVReader interface {
 	Get(key []byte) []byte
 	// Has checks if a key exists. Panics on nil key.
 	Has(key []byte) bool
+	// Returns the key with a proof
+	GetWithProof(key []byte) ([]byte, *iavl.RangeProof, error)
+	Hash() []byte
 }
 
 type KVWriter interface {

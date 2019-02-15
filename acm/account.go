@@ -123,8 +123,8 @@ func (acc *Account) Equal(accOther *Account) bool {
 }
 
 func (acc Account) String() string {
-	return fmt.Sprintf("Account{Address: %s; Sequence: %v; PublicKey: %v; Balance: %v; CodeLength: %v; Permissions: %v; ShardID: %v; storageRoot: %x;}",
-		acc.Address, acc.Sequence, acc.PublicKey, acc.Balance, len(acc.Code), acc.Permissions, acc.ShardID, acc.StorageRoot)
+	return fmt.Sprintf("Account{Address: %s; Sequence: %v; PublicKey: %v; Balance: %v; CodeLength: %v; Permissions: %v; ShardID: %v;}",
+		acc.Address, acc.Sequence, acc.PublicKey, acc.Balance, len(acc.Code), acc.Permissions, acc.ShardID)
 }
 
 func (acc *Account) Tagged() query.Tagged {

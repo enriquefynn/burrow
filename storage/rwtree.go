@@ -28,10 +28,6 @@ func NewRWTree(db dbm.DB, cacheSize int) *RWTree {
 	}
 }
 
-func (rwt *RWTree) GetAccountWithProof(key []byte) ([]byte, *iavl.RangeProof, error) {
-	return rwt.tree.GetWithProof(key)
-}
-
 // Tries to load the execution state from DB, returns nil with no error if no state found
 func (rwt *RWTree) Load(version int64, overwriting bool) error {
 	const errHeader = "RWTree.Load():"
@@ -99,9 +95,9 @@ func (rwt *RWTree) Dump() string {
 }
 
 func AddTreePrintTree(edge string, tree treeprint.Tree, rwt KVCallbackIterableReader) {
-	tree = tree.AddBranch(fmt.Sprintf("%q", edge))
+	tree = tree.AddBranch(fmt.Sprintf("%x", edge))
 	rwt.Iterate(nil, nil, true, func(key []byte, value []byte) error {
-		tree.AddNode(fmt.Sprintf("%q -> %q", string(key), string(value)))
+		tree.AddNode(fmt.Sprintf("%x -> %x", string(key), string(value)))
 		return nil
 	})
 }

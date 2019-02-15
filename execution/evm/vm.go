@@ -19,11 +19,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/big"
-	"reflect"
 	"strings"
 
 	"github.com/hyperledger/burrow/execution/evm/abi"
-	"github.com/tendermint/iavl"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/acm/acmstate"
@@ -31,11 +29,11 @@ import (
 	"github.com/hyperledger/burrow/crypto"
 	"github.com/hyperledger/burrow/crypto/sha3"
 	"github.com/hyperledger/burrow/execution/errors"
+	"github.com/hyperledger/burrow/execution/evm/abi"
 	. "github.com/hyperledger/burrow/execution/evm/asm"
 	"github.com/hyperledger/burrow/execution/exec"
 	"github.com/hyperledger/burrow/logging"
 	"github.com/hyperledger/burrow/permission"
-	"github.com/hyperledger/burrow/storage"
 	"github.com/hyperledger/burrow/txs"
 )
 
@@ -164,13 +162,15 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 // The input should prove the tx moved addr from Si to Sj,
 // Recreates the contract storage
 // executes move2 function in addr
-func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Address, blockRoot []byte, accountProof *iavl.RangeProof,
-	account *acm.Account, storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
+func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Address, accountProof, storageProof *proofs.Proof,
+	storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
 
-	// TODO: StorageRoot does not work properly, have to encode
-	// the storage of each contract in a merkle-tree like thing
-	// Problem is that if storage changes, we have to rehash every storage
-	// value, but, we don't really know where this storage value is
+	// Assume blockRoot is valid at this point
+	// Verify proof according to blockRoot
+	isValidProof := accountProof.Verify()
+	if isValidProof != nil {
+		return nil, errors.ErrorInvalidProof
+	}
 
 	var keys Words256
 	var values Words256
@@ -179,36 +179,16 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 		keys = append(keys, RightPadWord256(storageOpcodes[i:i+32]))
 		values = append(values, RightPadWord256(storageOpcodes[i+32:i+64]))
 	}
-	// Assume blockRoot is valid at this point
-	// Verify proof according to blockRoot
-	isValidProof := accountProof.Verify(blockRoot)
+
+	isValidProof = storageProof.VerifyStorageRoot(keys, values)
 	if isValidProof != nil {
 		return nil, errors.ErrorInvalidProof
 	}
 
-	accountKeyFormat := storage.NewMustKeyFormat("a", crypto.AddressLength)
-	cdc := amino.NewCodec()
-
-	encodedAccount, errMarshaling := cdc.MarshalBinary(account)
-	if errMarshaling != nil {
-		return nil, errors.ErrorCodeWrongShardExecution
-	}
-
-	isValidProof = accountProof.VerifyItem(accountKeyFormat.Key(account.Address), encodedAccount)
-	if isValidProof != nil {
-		return nil, errors.ErrorInvalidProof
-	}
-
-	storageHash := SimulateStorageTree(keys, values)
-	if !reflect.DeepEqual(storageHash, account.StorageRoot) {
-		return nil, errors.ErrorInvalidProof
-	}
-
-	// All proofs are ok from here
+	account, _ := acm.Decode(accountProof.DataValue)
 	if account.ShardID != vm.params.ShardID {
 		return nil, errors.ErrorCodeWrongShardExecution
 	}
-
 	callState.CreateMovedAccount(account)
 
 	for i := range keys {
@@ -217,7 +197,6 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 		useGasNegative(gas, GasStorageUpdate, callState)
 	}
 
-	// callState.SetShard(callee, vm.params.ShardID)
 	// TODO: Check if that works
 	// ret := vm.execute(callState, eventSink, caller, callee, code, input, value, gas)
 
