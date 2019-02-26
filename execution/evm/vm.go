@@ -143,7 +143,7 @@ func (vm *VM) fireCallEvent(eventSink EventSink, callType exec.CallType, errProv
 // gas:   Available gas. No refunds for gas.
 // code: May be nil, since the CALL opcode may be used to send value from contracts to accounts
 func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee crypto.Address, code,
-	input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
+	input []byte, value uint64, gas *uint64, shouldNotRevert bool) (output []byte, err errors.CodedError) {
 
 	if callState.GetShardID(callee) != vm.params.ShardID {
 		callState.PushError(errors.ErrorCodeWrongShardExecution)
@@ -151,7 +151,7 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 	}
 
 	// Always return output - we may have a reverted exception for which the return is meaningful
-	output, err = vm.call(callState, eventSink, caller, callee, code, input, value, gas, exec.CallTypeCall)
+	output, err = vm.call(callState, eventSink, caller, callee, code, input, value, gas, exec.CallTypeCall, shouldNotRevert)
 	if err == nil {
 		err = callState.Error()
 	}
@@ -204,7 +204,7 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 }
 
 func (vm *VM) call(callState Interface, eventSink EventSink, caller, callee crypto.Address, code,
-	input []byte, value uint64, gas *uint64, callType exec.CallType) (output []byte, err errors.CodedError) {
+	input []byte, value uint64, gas *uint64, callType exec.CallType, shouldNotRevert bool) (output []byte, err errors.CodedError) {
 
 	// fire the post call event (including exception if applicable) and make sure we return the accumulated call error
 	defer func() {
@@ -222,7 +222,7 @@ func (vm *VM) call(callState Interface, eventSink EventSink, caller, callee cryp
 
 	if len(code) > 0 {
 		vm.stackDepth += 1
-		output = vm.execute(callState, eventSink, caller, callee, code, input, value, gas)
+		output = vm.execute(callState, eventSink, caller, callee, code, input, value, gas, shouldNotRevert)
 		vm.stackDepth -= 1
 		if err != nil {
 			callState.PushError(err)
@@ -239,7 +239,7 @@ func (vm *VM) call(callState Interface, eventSink EventSink, caller, callee cryp
 // Different to the normal CALL or CALLCODE, the value does not need to be transferred to the callee.
 func (vm *VM) delegateCall(callState Interface, eventSink EventSink, caller, callee crypto.Address,
 	code, input []byte, value uint64, gas *uint64,
-	callType exec.CallType) (output []byte, err errors.CodedError) {
+	callType exec.CallType, shouldNotRevert bool) (output []byte, err errors.CodedError) {
 
 	// fire the post call event (including exception if applicable) and make sure we return the accumulated call error
 	defer func() {
@@ -258,7 +258,7 @@ func (vm *VM) delegateCall(callState Interface, eventSink EventSink, caller, cal
 
 	if len(code) > 0 {
 		vm.stackDepth += 1
-		output = vm.execute(callState, eventSink, caller, callee, code, input, value, gas)
+		output = vm.execute(callState, eventSink, caller, callee, code, input, value, gas, shouldNotRevert)
 		vm.stackDepth -= 1
 	}
 	return
@@ -276,7 +276,7 @@ func useGasNegative(gasLeft *uint64, gasToUse uint64, err errors.Sink) {
 
 // Executes the EVM code passed in the appropriate context
 func (vm *VM) execute(callState Interface, eventSink EventSink, caller, callee crypto.Address,
-	code, input []byte, value uint64, gas *uint64) (returnData []byte) {
+	code, input []byte, value uint64, gas *uint64, shouldNotRevert bool) (returnData []byte) {
 	vm.Debugf("(%d) (%s) %s (code=%d) gas: %v (d) %X\n", vm.stackDepth, caller, callee, len(code), *gas, input)
 
 	logger := vm.logger.With("evm_nonce", vm.nonce)
@@ -862,7 +862,7 @@ func (vm *VM) execute(callState Interface, eventSink EventSink, caller, callee c
 
 			// Run the input to get the contract code.
 			// NOTE: no need to copy 'input' as per Call contract.
-			ret, callErr := vm.Call(childCallState, eventSink, callee, newAccount, input, input, contractValue, gas)
+			ret, callErr := vm.Call(childCallState, eventSink, callee, newAccount, input, input, contractValue, gas, shouldNotRevert)
 			if callErr != nil {
 				stack.Push(Zero256)
 				// Note we both set the return buffer and return the result normally
@@ -944,22 +944,22 @@ func (vm *VM) execute(callState Interface, eventSink EventSink, caller, callee c
 				case CALL:
 					childCallState = callState.NewCache()
 					returnData, callErr = vm.call(childCallState, eventSink, callee, address, callState.GetCode(address),
-						args, value, &gasLimit, exec.CallTypeCall)
+						args, value, &gasLimit, exec.CallTypeCall, shouldNotRevert)
 
 				case CALLCODE:
 					childCallState = callState.NewCache()
 					returnData, callErr = vm.call(childCallState, eventSink, callee, callee, callState.GetCode(address),
-						args, value, &gasLimit, exec.CallTypeCode)
+						args, value, &gasLimit, exec.CallTypeCode, shouldNotRevert)
 
 				case DELEGATECALL:
 					childCallState = callState.NewCache()
 					returnData, callErr = vm.delegateCall(childCallState, eventSink, caller, callee,
-						callState.GetCode(address), args, value, &gasLimit, exec.CallTypeDelegate)
+						callState.GetCode(address), args, value, &gasLimit, exec.CallTypeDelegate, shouldNotRevert)
 
 				case STATICCALL:
 					childCallState = callState.NewCache(acmstate.ReadOnly)
 					returnData, callErr = vm.delegateCall(childCallState, NewLogFreeEventSink(eventSink),
-						callee, address, callState.GetCode(address), args, value, &gasLimit, exec.CallTypeStatic)
+						callee, address, callState.GetCode(address), args, value, &gasLimit, exec.CallTypeStatic, shouldNotRevert)
 
 				default:
 					panic(fmt.Errorf("switch statement should be exhaustive so this should not have been reached"))
@@ -1006,6 +1006,7 @@ func (vm *VM) execute(callState Interface, eventSink EventSink, caller, callee c
 			vm.Debugf(" => [%v, %v] (%d) 0x%X\n", offset, size, len(output), output)
 			return output
 
+			// Added shouldNotRevert to try to bypass contract exceptions
 		case REVERT: // 0xFD
 			offset, size := stack.PopBigInt(), stack.PopBigInt()
 			output := memory.Read(offset, size)

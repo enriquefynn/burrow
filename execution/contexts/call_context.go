@@ -249,7 +249,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 
 		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.AccountProof, ctx.tx.StorageProof, ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
 	} else {
-		ret, exception = vmach.Call(txCache, ctx.txe, caller, callee, code, ctx.tx.Data, value, &gas)
+		ret, exception = vmach.Call(txCache, ctx.txe, caller, callee, code, ctx.tx.Data, value, &gas, ctx.tx.ShouldNotRevert)
 	}
 	if exception != nil {
 		// Failure. Charge the gas fee. The 'value' was otherwise not transferred.
