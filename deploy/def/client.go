@@ -309,6 +309,14 @@ func (c *Client) BroadcastEnvelope(txEnv *txs.Envelope, logger *logging.Logger) 
 	return c.transactClient.BroadcastTxSync(ctx, &rpctransact.TxEnvelopeParam{Envelope: txEnv})
 }
 
+// BroadcastEnvelopeAsync Broadcast envelope async - can be locally signed or remote signing will be attempted
+func (c *Client) BroadcastEnvelopeAsync(txEnv *txs.Envelope) (*txs.Receipt, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	return c.transactClient.BroadcastTxAsync(ctx, &rpctransact.TxEnvelopeParam{Envelope: txEnv})
+}
+
 func (c *Client) ParseUint64(amount string) (uint64, error) {
 	if amount == "" {
 		return 0, nil
