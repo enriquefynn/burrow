@@ -77,8 +77,6 @@ message CallTx {
     bytes StorageOpCodes = 8;
     // Signatures from validators
     bytes SignedHeader = 9 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
-    // ShouldNotRevert indicates if the transaction should skip revert opcodes (1) or execute normally (0)
-    bool ShouldNotRevert = 10;
 }
 
 // A payment between two sets of parties
