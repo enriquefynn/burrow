@@ -1471,9 +1471,9 @@ func TestCallStackOverflow(t *testing.T) {
 
 func TestExtCodeHash(t *testing.T) {
 	cache := NewState(newAppState(), blockHashGetter)
-	ourVm := NewVM(newParams(), crypto.ZeroAddress, nil, logger)
-	account1 := newAccount(cache, "1")
-	account2 := newAccount(cache, "101")
+	ourVm := NewVM(newParams(1), crypto.ZeroAddress, nil, logger)
+	account1 := newAccount(cache, "1", 1)
+	account2 := newAccount(cache, "101", 1)
 
 	var gas uint64 = 100000
 
