@@ -244,6 +244,7 @@ func (qs *queryServer) streamSignedHeaders(ctx context.Context, blockRange *rpce
 			}
 			signedHeadersResult := SignedHeadersResult{
 				SignedHeader: &signedHeader,
+				TxExecutions: block.TxExecutions,
 			}
 			err = consumer(&signedHeadersResult)
 			if err != nil {

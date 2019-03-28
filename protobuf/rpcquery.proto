@@ -5,7 +5,6 @@ package rpcquery;
 option go_package = "github.com/hyperledger/burrow/rpc/rpcquery";
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "github.com/tendermint/tendermint/abci/types/types.proto";
 
 import "names.proto";
 import "acm.proto";
@@ -13,6 +12,7 @@ import "validator.proto";
 import "rpc.proto";
 import "payload.proto";
 import "rpcevents.proto";
+import "exec.proto";
 
 option (gogoproto.marshaler_all) = true;
 option (gogoproto.unmarshaler_all) = true;
@@ -43,6 +43,7 @@ service Query {
 
 message SignedHeadersResult {
     bytes SignedHeader = 1 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
+    repeated exec.TxExecution TxExecutions = 2;
 }
 
 message StatusParam {
