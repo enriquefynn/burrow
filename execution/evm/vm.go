@@ -22,6 +22,8 @@ import (
 	"strings"
 
 	"github.com/hyperledger/burrow/execution/evm/abi"
+	"github.com/hyperledger/burrow/proofs"
+	"github.com/sirupsen/logrus"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/acm/acmstate"
@@ -168,8 +170,14 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 
 	// Assume blockRoot is valid at this point
 	// Verify proof according to blockRoot
+	if accountProof == nil || storageProof == nil {
+		return nil, errors.ErrorInvalidProof
+	}
 	isValidProof := accountProof.Verify()
+	logrus.Infof("Account ROOT: %x", accountProof.CommitProof.ComputeRootHash())
+	logrus.Infof("Storage ROOT: %x", storageProof.CommitProof.ComputeRootHash())
 	if isValidProof != nil {
+		logrus.Warnf("Invalid account proof")
 		return nil, errors.ErrorInvalidProof
 	}
 
@@ -181,10 +189,12 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 		values = append(values, RightPadWord256(storageOpcodes[i+32:i+64]))
 	}
 
-	isValidProof = storageProof.VerifyStorageRoot(keys, values)
-	if isValidProof != nil {
-		return nil, errors.ErrorInvalidProof
-	}
+	// isValidProof = storageProof.Verify()
+	// isValidProof = storageProof.VerifyStorageRoot(keys, values)
+	// if isValidProof != nil {
+	// 	logrus.Warnf("Invalid storage proof")
+	// 	return nil, errors.ErrorInvalidProof
+	// }
 
 	account, _ := acm.Decode(accountProof.DataValue)
 	if account.ShardID != vm.params.ShardID {
@@ -193,7 +203,7 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 	callState.CreateMovedAccount(account)
 
 	for i := range keys {
-		// fmt.Printf("Recreating: %x %x\n", keys[i], values[i])
+		fmt.Printf("Recreating: %x %x\n", keys[i], values[i])
 		callState.SetStorage(account.Address, keys[i], values[i])
 		useGasNegative(gas, GasStorageUpdate, callState)
 	}

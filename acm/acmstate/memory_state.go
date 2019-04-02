@@ -6,6 +6,7 @@ import (
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/crypto"
+	"github.com/hyperledger/burrow/proofs"
 )
 
 type MemoryState struct {
@@ -25,6 +26,11 @@ func NewMemoryState() *MemoryState {
 
 func (ms *MemoryState) GetAccount(address crypto.Address) (*acm.Account, error) {
 	return ms.Accounts[address], nil
+}
+
+// TODO SHARDING
+func (ms *MemoryState) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+	return nil, nil
 }
 
 func (ms *MemoryState) UpdateAccount(updatedAccount *acm.Account) error {

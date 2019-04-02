@@ -5,6 +5,7 @@ import (
 	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/crypto"
 	"github.com/hyperledger/burrow/permission"
+	"github.com/hyperledger/burrow/proofs"
 )
 
 type AccountGetter interface {
@@ -31,6 +32,11 @@ type StorageGetter interface {
 	// Retrieve a 32-byte value stored at key for the account at address, return Zero256 if key does not exist but
 	// error if address does not
 	GetStorage(address crypto.Address, key binary.Word256) (value binary.Word256, err error)
+}
+type ProofGetter interface {
+	// Retrieve a 32-byte value stored at key for the account at address, return Zero256 if key does not exist but
+	// error if address does not
+	GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error)
 }
 
 type StorageSetter interface {
@@ -60,6 +66,7 @@ type AccountStatsGetter interface {
 type Reader interface {
 	AccountGetter
 	StorageGetter
+	ProofGetter
 }
 
 type Iterable interface {

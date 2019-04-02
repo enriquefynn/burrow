@@ -22,6 +22,7 @@ import (
 	"github.com/hyperledger/burrow/keys"
 	"github.com/hyperledger/burrow/logging"
 	"github.com/hyperledger/burrow/permission"
+	"github.com/hyperledger/burrow/proofs"
 	"github.com/hyperledger/burrow/rpc"
 	"github.com/hyperledger/burrow/rpc/rpcevents"
 	"github.com/hyperledger/burrow/rpc/rpcquery"
@@ -150,6 +151,21 @@ func (c *Client) GetAccount(address crypto.Address) (*acm.Account, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 	return c.queryClient.GetAccount(ctx, &rpcquery.GetAccountParam{Address: address})
+}
+
+func (c *Client) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+	logrus.Infof("SENDING TO: %v", address)
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+	pr, err := c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
+	return []*proofs.Proof{&pr.AccountProof, &pr.StorageProof}, err
+}
+
+func (c *Client) GetAccountProof(address crypto.Address) (*rpcquery.AccountProofs, error) {
+	logrus.Infof("SENDING TO: %v", address)
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+	return c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
 }
 
 func (c *Client) GetStorage(address crypto.Address, key binary.Word256) (binary.Word256, error) {

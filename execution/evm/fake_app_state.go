@@ -23,6 +23,7 @@ import (
 	"github.com/hyperledger/burrow/acm/acmstate"
 	. "github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/crypto"
+	"github.com/hyperledger/burrow/proofs"
 )
 
 type FakeAppState struct {
@@ -35,6 +36,11 @@ var _ acmstate.ReaderWriter = &FakeAppState{}
 func (fas *FakeAppState) GetAccount(addr crypto.Address) (*acm.Account, error) {
 	account := fas.accounts[addr]
 	return account, nil
+}
+
+// TODO SHARDING
+func (fas *FakeAppState) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+	return nil, nil
 }
 
 func (fas *FakeAppState) UpdateAccount(account *acm.Account) error {

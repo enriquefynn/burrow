@@ -312,16 +312,23 @@ func (s *State) GetKeyFormat() KeyFormatStore {
 }
 
 // GetKeyWithProof returns the data plus a proof of its inclusion in the tree
-func (s *State) GetKeyWithProof(prefix []byte, address crypto.Address) (*proofs.Proof, error) {
-	var commitPrefix []byte
-	if reflect.DeepEqual(prefix, keys.Account.Key()) {
-		commitPrefix = keys.Account.Prefix()
-	} else {
-		commitPrefix = keys.Storage.Key(address)
+func (s *State) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+	accountProof, err := s.getKeyWithProof(keys.Account.Prefix(), address)
+	if err != nil {
+		return nil, err
 	}
+	storageProof, err := s.getKeyWithProof(keys.Storage.Key(address), address)
+	if err != nil {
+		return nil, err
+	}
+	return []*proofs.Proof{accountProof, storageProof}, nil
+}
+
+// getKeyWithProof returns the data plus a proof of its inclusion in the tree
+func (s *State) getKeyWithProof(prefix []byte, address crypto.Address) (*proofs.Proof, error) {
 	var dataKey []byte
 	var dataProof *iavl.RangeProof
-	commit, commitProof, err := s.writeState.forest.GetCommitProof(commitPrefix)
+	commit, commitProof, err := s.writeState.forest.GetCommitProof(prefix)
 	// fmt.Printf("Dump: %v\n", s.writeState.forest.Dump())
 
 	if err != nil {
@@ -329,7 +336,7 @@ func (s *State) GetKeyWithProof(prefix []byte, address crypto.Address) (*proofs.
 	}
 
 	if reflect.DeepEqual(prefix, keys.Account.Key()) {
-		tree, err := s.Forest.Reader(commitPrefix)
+		tree, err := s.Forest.Reader(prefix)
 		if err != nil {
 			return nil, err
 		}

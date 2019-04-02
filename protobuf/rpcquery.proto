@@ -24,6 +24,7 @@ service Query {
     rpc Status (StatusParam) returns (rpc.ResultStatus);
     rpc GetAccount (GetAccountParam) returns (acm.Account);
     rpc GetStorage (GetStorageParam) returns (StorageValue);
+    rpc GetAccountProofs (GetAccountParam) returns (AccountProofs);
 
     rpc ListAccounts (ListAccountsParam) returns (stream acm.Account);
 
@@ -62,6 +63,12 @@ message GetStorageParam {
 
 message StorageValue {
     bytes Value = 1 [(gogoproto.customtype) = "github.com/hyperledger/burrow/binary.Word256", (gogoproto.nullable) = false];
+}
+
+message AccountProofs {
+    bytes AccountProof = 1 [(gogoproto.customtype) = "github.com/hyperledger/burrow/proofs.Proof", (gogoproto.nullable) = false];
+    bytes StorageProof = 2 [(gogoproto.customtype) = "github.com/hyperledger/burrow/proofs.Proof", (gogoproto.nullable) = false];
+    bytes StorageOpCodes = 3;
 }
 
 message ListAccountsParam {

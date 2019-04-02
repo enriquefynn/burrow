@@ -22,6 +22,7 @@ import (
 
 	"github.com/hyperledger/burrow/acm/validator"
 	"github.com/hyperledger/burrow/genesis"
+	"github.com/hyperledger/burrow/proofs"
 
 	"github.com/hyperledger/burrow/execution/state"
 
@@ -379,6 +380,13 @@ func (exe *executor) GetStorage(address crypto.Address, key binary.Word256) (bin
 	exe.RLock()
 	defer exe.RUnlock()
 	return exe.stateCache.GetStorage(address, key)
+}
+
+// TODO SHARDING: GET PROOF
+func (exe *executor) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+	exe.RLock()
+	defer exe.RUnlock()
+	return exe.stateCache.GetAccountWithProof(address)
 }
 
 func (exe *executor) PendingValidators() validator.IterableReader {

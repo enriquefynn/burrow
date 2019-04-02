@@ -132,7 +132,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	}
 
 	createContract := false
-	isMove2 := ctx.tx.AccountProof != nil
+	isMove2 := ctx.tx.SignedHeader != nil
 	if !isMove2 {
 		createContract = ctx.tx.Address == nil
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/storage"
+	"github.com/sirupsen/logrus"
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -86,9 +87,8 @@ func (p *Proof) Verify() error {
 
 // VerifyStorageRoot verifies the commit and if the storage root proof is correct
 func (p *Proof) VerifyStorageRoot(keys, values binary.Words256) error {
-	blockRoot := p.CommitProof.ComputeRootHash()
 	// Verify Commit proof
-	err := p.CommitProof.Verify(blockRoot)
+	err := p.Verify()
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,8 @@ func (p *Proof) VerifyStorageRoot(keys, values binary.Words256) error {
 	commitID, err := storage.UnmarshalCommitID(p.CommitValue)
 
 	if !reflect.DeepEqual(commitID.Hash.Bytes(), SimulateStorageTree(keys, values)) {
-		return fmt.Errorf("Wrong storage proof")
+		logrus.Infof("Wrong storage proof commit hash: %x != reconstructed storage: %x", commitID.Hash.Bytes(), SimulateStorageTree(keys, values))
+		return fmt.Errorf("Wrong storage proof commit hash: %x != reconstructed storage: %x", commitID.Hash.Bytes(), SimulateStorageTree(keys, values))
 	}
 	return nil
 }

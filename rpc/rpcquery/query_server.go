@@ -8,6 +8,7 @@ import (
 	"github.com/hyperledger/burrow/acm/acmstate"
 	"github.com/hyperledger/burrow/acm/validator"
 	"github.com/hyperledger/burrow/bcm"
+	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/consensus/tendermint"
 	"github.com/hyperledger/burrow/event"
 	"github.com/hyperledger/burrow/event/query"
@@ -63,6 +64,17 @@ func (qs *queryServer) GetAccount(ctx context.Context, param *GetAccountParam) (
 		acc = &acm.Account{}
 	}
 	return acc, err
+}
+
+func (qs *queryServer) GetAccountProofs(ctx context.Context, param *GetAccountParam) (*AccountProofs, error) {
+	proofs, err := qs.accounts.GetAccountWithProof(param.Address)
+	var storageOpCodes []byte
+	qs.accounts.IterateStorage(param.Address, func(key, value binary.Word256) error {
+		storageOpCodes = append(storageOpCodes, key[:]...)
+		storageOpCodes = append(storageOpCodes, value[:]...)
+		return nil
+	})
+	return &AccountProofs{AccountProof: *proofs[0], StorageProof: *proofs[1], StorageOpCodes: storageOpCodes}, err
 }
 
 func (qs *queryServer) GetStorage(ctx context.Context, param *GetStorageParam) (*StorageValue, error) {

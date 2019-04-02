@@ -20,6 +20,7 @@ import (
 	"sync"
 
 	"github.com/hyperledger/burrow/execution/errors"
+	"github.com/hyperledger/burrow/proofs"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/binary"
@@ -80,6 +81,11 @@ func (cache *Cache) GetAccount(address crypto.Address) (*acm.Account, error) {
 		return nil, nil
 	}
 	return accInfo.account.Copy(), nil
+}
+
+// TODO SHARDING: GET PROOF
+func (cache *Cache) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+	return nil, nil
 }
 
 func (cache *Cache) UpdateAccount(account *acm.Account) error {
