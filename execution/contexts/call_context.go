@@ -1,10 +1,11 @@
 package contexts
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/hyperledger/burrow/crypto"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/hyperledger/burrow/acm"
 	"github.com/hyperledger/burrow/acm/acmstate"
@@ -127,7 +128,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	shardID := ctx.Blockchain.ShardID()
 
 	if inAcc.ShardID != shardID && !inAcc.Address.Word256().IsZero() {
-		logrus.Infof("In acc: %v out acc: %v", inAcc.Address, outAcc.Address)
+		log.Infof("In acc: %v out acc: %v", inAcc.Address, outAcc.Address)
 		return errors.ErrorCodeWrongShardExecution
 	}
 
@@ -206,46 +207,39 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	var exception errors.CodedError
 
 	if isMove2 {
-		// validators := ctx.Blockchain.Validators()
-		// if ctx.tx.SignedHeader.Commit.Size() != len(validators) {
-		// 	return errors.ErrorInvalidProof
-		// }
+		validators := ctx.Blockchain.Validators()
+		if ctx.tx.SignedHeader.Commit.Size() != len(validators) {
+			log.Warnf("Invalid validators size: %v != %v", ctx.tx.SignedHeader.Commit.Size(), len(validators))
+			return errors.ErrorInvalidProof
+		}
 
-		// for idx, validator := range validators {
-		// 	hash := ctx.tx.SignedHeader.Hash()
-		// 	fmt.Printf("Validating: %x\n", hash)
-		// 	err := validator.PublicKey.VerifyBytes(hash, ctx.tx.SignedHeader.Commit.GetByIndex(idx).Signature)
-		// 	if err != nil {
-		// 		return errors.ErrorInvalidProof
-		// 	}
-		// }
+		validator := validators[0]
+		chainID := ctx.tx.SignedHeader.ChainID
+		validatorPubKey := validator.PublicKey.TendermintPubKey()
+		commit := ctx.tx.SignedHeader.Commit.GetByIndex(0)
+		err := commit.Verify(chainID, validatorPubKey)
+		// Bad proof
+		if err != nil {
+			log.Infof("Error: %v", err)
+			return errors.ErrorInvalidProof
+		}
+		err = commit.ValidateBasic()
+		if err != nil {
+			log.Infof("Error: %v", err)
+			return errors.ErrorInvalidProof
+		}
+		if !bytes.Equal(ctx.tx.SignedHeader.Header.Hash(), commit.BlockID.Hash) {
+			log.Infof("Signed header hash differs: %x != %x", ctx.tx.SignedHeader.Header.Hash(), commit.BlockID.Hash)
+			return errors.ErrorInvalidProof
+		}
 
-		// ctx.Tip.Validators().Iterate(func(id crypto.Addressable, power *big.Int) bool {
-		// 	fmt.Printf("Validator: %v\n", id.GetPublicKey())
-		// 	hash := ctx.tx.SignedHeader.Hash()
-		// 	fmt.Printf("Validating: %x\n", hash)
-		// 	err := id.GetPublicKey().VerifyBytes(hash, ctx.tx.SignedHeader.Commit.GetByIndex(idx).Signature)
-		// 	if err != nil {
-		// 		return true
-		// 	}
-		// 	idx++
-		// 	return false
-		// })
-
-		// ctx.tx.SignedHeader.Commit.
-		// ctx.Tip.Validators().Iterate(func(id crypto.Addressable, power *big.Int) bool {
-		// 	fmt.Printf("Validator: %v\n", id.GetPublicKey())
-		// 	fmt.Printf("Block root: %x\n", ctx.tx.BlockRoot)
-		// 	err = id.GetPublicKey().Verify(ctx.tx.BlockRoot, *ctx.tx.Signatures[nval])
-		// 	if err != nil {
-		// 		return true
-		// 	}
-		// 	nval++
-		// 	return false
-		// })
-		// if nval != ctx.Tip.NumValidators() {
-		// 	return errors.ErrorInvalidProof
-		// }
+		// Header is good from now on
+		// Check the accounts tree
+		globalHash := ctx.tx.AccountProof.CommitProof.ComputeRootHash()
+		if !bytes.Equal(globalHash, ctx.tx.SignedHeader.AppHash) {
+			log.Warnf("Accounts hash differ: %x %x", globalHash, ctx.tx.SignedHeader.AppHash)
+			return errors.ErrorInvalidProof
+		}
 
 		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.AccountProof, ctx.tx.StorageProof, ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
 	} else {

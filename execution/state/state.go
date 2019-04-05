@@ -312,7 +312,7 @@ func (s *State) GetKeyFormat() KeyFormatStore {
 }
 
 // GetKeyWithProof returns the data plus a proof of its inclusion in the tree
-func (s *State) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+func (s *State) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
 	accountProof, err := s.getKeyWithProof(keys.Account.Prefix(), address)
 	if err != nil {
 		return nil, err
@@ -321,7 +321,7 @@ func (s *State) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, er
 	if err != nil {
 		return nil, err
 	}
-	return []*proofs.Proof{accountProof, storageProof}, nil
+	return proofs.NewShardProof(accountProof, storageProof), nil
 }
 
 // getKeyWithProof returns the data plus a proof of its inclusion in the tree

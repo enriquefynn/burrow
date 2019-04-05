@@ -4,10 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/burrow/rpc/rpcquery"
-
-	// "github.com/tendermint/tendermint/types"
-
-	"github.com/tendermint/tendermint/types"
 )
 
 type Node struct {
@@ -97,13 +93,14 @@ func (dp *Dependencies) RemoveDependency(dependencies []int64) map[*TxResponse]b
 	return returnedDep
 }
 
-func (dp *Dependencies) AddFieldsToMove2(id int64, signedHeader *types.SignedHeader, proofs *rpcquery.AccountProofs) {
+func (dp *Dependencies) AddFieldsToMove2(id int64, proofToGoToTx []map[int64][]*TxResponse, partitionID int, height int64, proofs *rpcquery.AccountProofs) {
 	dep := dp.idDep[id]
 	if dep.tx.MethodName != "move2" {
 		panic("Dependency should be move2")
 	}
-	dep.tx.Tx.SignedHeader = signedHeader
 	dep.tx.Tx.AccountProof = &proofs.AccountProof
 	dep.tx.Tx.StorageProof = &proofs.StorageProof
 	dep.tx.Tx.StorageOpCodes = proofs.StorageOpCodes
+	// Add proof and request for signer to ProofToGoTxResponse
+	proofToGoToTx[partitionID][height+2] = append(proofToGoToTx[partitionID][height+2], dep.tx)
 }

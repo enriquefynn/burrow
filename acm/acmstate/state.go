@@ -36,7 +36,7 @@ type StorageGetter interface {
 type ProofGetter interface {
 	// Retrieve a 32-byte value stored at key for the account at address, return Zero256 if key does not exist but
 	// error if address does not
-	GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error)
+	GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error)
 }
 
 type StorageSetter interface {

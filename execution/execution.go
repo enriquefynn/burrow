@@ -383,7 +383,7 @@ func (exe *executor) GetStorage(address crypto.Address, key binary.Word256) (bin
 }
 
 // TODO SHARDING: GET PROOF
-func (exe *executor) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+func (exe *executor) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
 	exe.RLock()
 	defer exe.RUnlock()
 	return exe.stateCache.GetAccountWithProof(address)

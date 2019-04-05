@@ -144,8 +144,8 @@ func (muf *MutableForest) Hash() []byte {
 }
 
 // Get proof of a commited state
-func (imf *MutableForest) GetCommitProof(prefix []byte) ([]byte, *iavl.RangeProof, error) {
-	return imf.commitsTree.GetWithProof(prefix)
+func (muf *MutableForest) GetCommitProof(prefix []byte) ([]byte, *iavl.RangeProof, error) {
+	return muf.commitsTree.GetWithProof(prefix)
 }
 
 // Get the current global version for all versions of all trees in this forest

@@ -153,19 +153,19 @@ func (c *Client) GetAccount(address crypto.Address) (*acm.Account, error) {
 	return c.queryClient.GetAccount(ctx, &rpcquery.GetAccountParam{Address: address})
 }
 
-func (c *Client) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
-	logrus.Infof("SENDING TO: %v", address)
+func (c *Client) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 	pr, err := c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
-	return []*proofs.Proof{&pr.AccountProof, &pr.StorageProof}, err
+	return proofs.NewShardProof(&pr.AccountProof, &pr.StorageProof), err
 }
 
 func (c *Client) GetAccountProof(address crypto.Address) (*rpcquery.AccountProofs, error) {
-	logrus.Infof("SENDING TO: %v", address)
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
-	return c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
+	accProof, err := c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
+	logrus.Infof("PROOF COMMITS ROOT HASH: %x", accProof.AccountProof.CommitProof.ComputeRootHash())
+	return accProof, err
 }
 
 func (c *Client) GetStorage(address crypto.Address, key binary.Word256) (binary.Word256, error) {

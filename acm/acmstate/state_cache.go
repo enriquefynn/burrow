@@ -84,7 +84,7 @@ func (cache *Cache) GetAccount(address crypto.Address) (*acm.Account, error) {
 }
 
 // TODO SHARDING: GET PROOF
-func (cache *Cache) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+func (cache *Cache) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
 	return nil, nil
 }
 

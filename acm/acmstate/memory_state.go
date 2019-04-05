@@ -29,7 +29,7 @@ func (ms *MemoryState) GetAccount(address crypto.Address) (*acm.Account, error) 
 }
 
 // TODO SHARDING
-func (ms *MemoryState) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+func (ms *MemoryState) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
 	return nil, nil
 }
 

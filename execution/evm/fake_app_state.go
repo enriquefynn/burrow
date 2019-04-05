@@ -39,7 +39,7 @@ func (fas *FakeAppState) GetAccount(addr crypto.Address) (*acm.Account, error) {
 }
 
 // TODO SHARDING
-func (fas *FakeAppState) GetAccountWithProof(address crypto.Address) ([]*proofs.Proof, error) {
+func (fas *FakeAppState) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
 	return nil, nil
 }
 

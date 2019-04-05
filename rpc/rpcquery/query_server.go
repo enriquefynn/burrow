@@ -74,7 +74,7 @@ func (qs *queryServer) GetAccountProofs(ctx context.Context, param *GetAccountPa
 		storageOpCodes = append(storageOpCodes, value[:]...)
 		return nil
 	})
-	return &AccountProofs{AccountProof: *proofs[0], StorageProof: *proofs[1], StorageOpCodes: storageOpCodes}, err
+	return &AccountProofs{AccountProof: *proofs.AccountProof, StorageProof: *proofs.StorageProof, StorageOpCodes: storageOpCodes}, err
 }
 
 func (qs *queryServer) GetStorage(ctx context.Context, param *GetStorageParam) (*StorageValue, error) {
