@@ -35,7 +35,6 @@ func (ac *Accounts) GetOrCreateAccount(addr common.Address) *SeqAccount {
 	if val, ok := ac.AccountMap[addr]; ok {
 		return val
 	}
-	// logrus.Infof("Account id: %v", ac.lastAccountID)
 	acc := acm.GeneratePrivateAccountFromSecret(strconv.Itoa(ac.lastAccountID))
 	ac.AccountMap[addr] = &SeqAccount{
 		Account:             acm.SigningAccounts([]*acm.PrivateAccount{acc})[0],
@@ -70,11 +69,12 @@ func (ac *Accounts) IsAllowed(addr crypto.Address, tokenID int64) bool {
 }
 
 type TxResponse struct {
-	PartitionIndex  int
-	ChainID         string
-	Tx              *payload.CallTx
-	Signer          *SeqAccount
-	MethodName      string
+	PartitionIndex int
+	ChainID        string
+	Tx             *payload.CallTx
+	Signer         *SeqAccount
+	MethodName     string
+	// Tx arguments
 	OriginalIds     []int64
 	OriginalBirthID int64
 	AddressArgument []common.Address

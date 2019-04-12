@@ -1,15 +1,12 @@
 package proofs
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 
-	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/storage"
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
-	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 type ShardProof struct {
@@ -28,15 +25,17 @@ type Proof struct {
 	CommitProof *iavl.RangeProof
 	DataProof   *iavl.RangeProof
 	CommitValue []byte
-	DataValue   []byte
+	DataValues  [][]byte
+	DataKeys    [][]byte
 }
 
-func NewProof(commitProof, dataProof *iavl.RangeProof, commitValue, dataValue []byte) *Proof {
+func NewProof(commitProof, dataProof *iavl.RangeProof, commitValue []byte, dataKeys, dataValues [][]byte) *Proof {
 	return &Proof{
 		CommitProof: commitProof,
 		DataProof:   dataProof,
 		CommitValue: commitValue,
-		DataValue:   dataValue,
+		DataKeys:    dataKeys,
+		DataValues:  dataValues,
 	}
 }
 
@@ -90,40 +89,18 @@ func (p *Proof) Verify() error {
 		return err
 	}
 	key = p.DataProof.Keys()[0]
-	err = p.DataProof.VerifyItem(key, p.DataValue)
+	err = p.DataProof.VerifyItem(key, p.DataValues[0])
 	if err != nil {
 		return err
 	}
+
+	// Verify storage keys
+	for i := range p.DataKeys {
+		err = p.DataProof.VerifyItem(p.DataKeys[i], p.DataValues[i])
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
-}
-
-// VerifyStorageRoot verifies the commit and if the storage root proof is correct
-func (p *Proof) VerifyStorageRoot(keys, values binary.Words256) error {
-	// Verify Commit proof
-	blockRoot := p.CommitProof.ComputeRootHash()
-	err := p.CommitProof.Verify(blockRoot)
-	if err != nil {
-		return err
-	}
-	storageHash := SimulateStorageTree(keys, values)
-
-	commitID, err := storage.UnmarshalCommitID(p.CommitValue)
-	if err != nil {
-		return err
-	}
-
-	if bytes.Compare(commitID.Hash.Bytes(), storageHash) != 0 {
-		return fmt.Errorf("Wrong storage proof commit hash: %x != reconstructed storage: %x", commitID.Hash.Bytes(), storageHash)
-	}
-	return nil
-}
-
-func SimulateStorageTree(keys, values binary.Words256) []byte {
-	db := dbm.NewMemDB()
-	rwt := storage.NewRWTree(db, 2048)
-	for i := range keys {
-		rwt.Set(keys[i].Bytes(), values[i].Bytes())
-	}
-	rwt.Save()
-	return rwt.Hash()
 }

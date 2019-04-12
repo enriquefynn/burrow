@@ -164,7 +164,6 @@ func (c *Client) GetAccountProof(address crypto.Address) (*rpcquery.AccountProof
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 	accProof, err := c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
-	logrus.Infof("PROOF COMMITS ROOT HASH: %x", accProof.AccountProof.CommitProof.ComputeRootHash())
 	return accProof, err
 }
 

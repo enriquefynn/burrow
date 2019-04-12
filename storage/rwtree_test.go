@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	hex "github.com/tmthrgd/go-hex"
 
 	"github.com/stretchr/testify/assert"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -18,11 +20,76 @@ func TestSave(t *testing.T) {
 	dam := bz("dam")
 	rwt.Set(foo, gaa)
 	rwt.Save()
+	logrus.Infof("HASH: %x version: %x", rwt.Hash(), rwt.Version())
 	assert.Equal(t, gaa, rwt.Get(foo))
 	rwt.Set(foo, dam)
 	_, _, err := rwt.Save()
 	require.NoError(t, err)
 	assert.Equal(t, dam, rwt.Get(foo))
+}
+
+func TestAAA(t *testing.T) {
+	db := dbm.NewMemDB()
+	rwt := NewRWTree(db, 100)
+	key0, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
+	key1, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000001")
+	key5, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000005")
+
+	val0, _ := hex.DecodeString("0000000000000000c918f94e305e2543b7c3f3c15c35cf41cba8a5b300000001")
+	val1, _ := hex.DecodeString("00005a50b310c470c614b90f294a321086318c618c63294e5394a65ad6b739ab")
+	val5, _ := hex.DecodeString("000000000000000000000000ce06685804a0917a1c8b72038e768ee1e5103c2b")
+
+	rwt.Set(key0, val0)
+	rwt.Set(key1, val1)
+	rwt.Set(key5, val5)
+	rwt.Save()
+	startKey, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
+	endKey, _ := hex.DecodeString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+	keys, values, _, _ := rwt.GetRangeWithProof(startKey, endKey, 1000)
+	logrus.Infof("Keys %x", keys)
+	logrus.Infof("Values %x", values)
+	logrus.Infof("HASH: %x version: %x", rwt.Hash(), rwt.Version())
+}
+
+func TestBBB(t *testing.T) {
+	startKey, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
+	endKey, _ := hex.DecodeString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+	db := dbm.NewMemDB()
+	rwt := NewRWTree(db, 100)
+	key0, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
+	key1, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000001")
+	key2, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000002")
+	key6, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000006")
+
+	val0, _ := hex.DecodeString("0000000000000000c918f94e305e2543b7c3f3c15c35cf41cba8a5b300000001")
+	val1, _ := hex.DecodeString("00005a50b310c470c614b90f294a321086318c618c63294e5394a65ad6b739ab")
+	val2, _ := hex.DecodeString("000000000000000000000000000000000000000000000000000000005caf4897")
+	val6, _ := hex.DecodeString("000000000000000000000000ce06685804a0917a1c8b72038e768ee1e5103c2b")
+
+	rwt.Set(key0, val0)
+	rwt.Set(key1, val1)
+	rwt.Set(key2, val2)
+	rwt.Set(key6, val6)
+	rwt.Delete(key6)
+	hash, version, _ := rwt.Save()
+	hash, version, _ = rwt.Save()
+	hash, version, _ = rwt.Save()
+	hash, version, _ = rwt.Save()
+	hash, version, _ = rwt.Save()
+	hash, version, _ = rwt.Save()
+	hash, version, _ = rwt.Save()
+	hash, version, _ = rwt.Save()
+	// hash, version, _ = rwt.Save()
+	fmt.Printf("HASH: %x version: %v\n", hash, version)
+	fmt.Printf("DUMP: %v\n", rwt.Dump())
+	rwt.Set(key2, val2)
+	hash, version, _ = rwt.Save()
+	fmt.Printf("DUMP2: %v\n", rwt.Dump())
+	fmt.Printf("HASH: %x version: %v\n", hash, version)
+	keys, values, proof, _ := rwt.GetRangeWithProof(startKey, endKey, 1000)
+	logrus.Infof("Keys %x", keys)
+	logrus.Infof("Values %x", values)
+	logrus.Infof("Proof %x", proof.ComputeRootHash())
 }
 
 func TestEmptyTree(t *testing.T) {

@@ -313,13 +313,12 @@ func TestMove2(t *testing.T) {
 			Amount:   0,
 			Sequence: acc02.Sequence + 1,
 		},
-		Address:        nil,
-		GasLimit:       100000000,
-		Data:           input,
-		BlockRoot:      stateHash,
-		AccountProof:   accountProof,
-		MovedAccount:   decodedAccount,
-		StorageOpCodes: storageKeyValues,
+		Address:      nil,
+		GasLimit:     100000000,
+		Data:         input,
+		BlockRoot:    stateHash,
+		AccountProof: accountProof,
+		MovedAccount: decodedAccount,
 		// BlockHeader
 	}
 	err = exe2.signExecuteCommit(tx, chainID2, privAccounts2[0])

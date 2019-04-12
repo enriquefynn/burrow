@@ -68,7 +68,6 @@ message StorageValue {
 message AccountProofs {
     bytes AccountProof = 1 [(gogoproto.customtype) = "github.com/hyperledger/burrow/proofs.Proof", (gogoproto.nullable) = false];
     bytes StorageProof = 2 [(gogoproto.customtype) = "github.com/hyperledger/burrow/proofs.Proof", (gogoproto.nullable) = false];
-    bytes StorageOpCodes = 3;
 }
 
 message ListAccountsParam {

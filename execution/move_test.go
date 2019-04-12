@@ -158,10 +158,9 @@ func TestMove2(t *testing.T) {
 		GasLimit: 100000000,
 		Data:     input,
 		// Move
-		AccountProof:   accountProof,
-		StorageProof:   storageProof,
-		StorageOpCodes: storageKeyValues,
-		SignedHeader:   nil,
+		AccountProof: accountProof,
+		StorageProof: storageProof,
+		SignedHeader: nil,
 	}
 
 	err = exe2.signExecuteCommitInChainID(tx, "2", privAccountsShard2[0])

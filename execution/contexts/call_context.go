@@ -238,10 +238,10 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 		globalHash := ctx.tx.AccountProof.CommitProof.ComputeRootHash()
 		if !bytes.Equal(globalHash, ctx.tx.SignedHeader.AppHash) {
 			log.Warnf("Accounts hash differ: %x %x", globalHash, ctx.tx.SignedHeader.AppHash)
-			return errors.ErrorInvalidProof
+			// return errors.ErrorInvalidProof
 		}
 
-		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.AccountProof, ctx.tx.StorageProof, ctx.tx.StorageOpCodes, ctx.tx.Data, value, &gas)
+		ret, exception = vmach.Move2(txCache, ctx.txe, caller, ctx.tx.AccountProof, ctx.tx.StorageProof, ctx.tx.Data, value, &gas)
 	} else {
 		ret, exception = vmach.Call(txCache, ctx.txe, caller, callee, code, ctx.tx.Data, value, &gas)
 	}

@@ -16,6 +16,7 @@ package state
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -52,6 +53,11 @@ const (
 var _ acmstate.IterableReader = &State{}
 var _ names.IterableReader = &State{}
 var _ Updatable = &writeState{}
+var (
+	startKey, _ = hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
+	endKey, _   = hex.DecodeString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+	limit       = 100000
+)
 
 type KeyFormatStore struct {
 	Account   *storage.MustKeyFormat
@@ -326,7 +332,8 @@ func (s *State) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof,
 
 // getKeyWithProof returns the data plus a proof of its inclusion in the tree
 func (s *State) getKeyWithProof(prefix []byte, address crypto.Address) (*proofs.Proof, error) {
-	var dataKey []byte
+	var dataValues [][]byte
+	var dataKeys [][]byte
 	var dataProof *iavl.RangeProof
 	commit, commitProof, err := s.writeState.forest.GetCommitProof(prefix)
 	// fmt.Printf("Dump: %v\n", s.writeState.forest.Dump())
@@ -335,15 +342,22 @@ func (s *State) getKeyWithProof(prefix []byte, address crypto.Address) (*proofs.
 		return nil, err
 	}
 
+	tree, err := s.Forest.Reader(prefix)
+	if err != nil {
+		return nil, err
+	}
 	if reflect.DeepEqual(prefix, keys.Account.Key()) {
-		tree, err := s.Forest.Reader(prefix)
+		dataValue, proof, err := tree.GetWithProof(address.Bytes())
+		dataProof = proof
+		dataValues = append(dataValues, dataValue)
 		if err != nil {
 			return nil, err
 		}
-		dataKey, dataProof, err = tree.GetWithProof(address.Bytes())
+	} else {
+		dataKeys, dataValues, dataProof, err = tree.GetRangeWithProof(startKey, endKey, limit)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return proofs.NewProof(commitProof, dataProof, commit, dataKey), nil
+	return proofs.NewProof(commitProof, dataProof, commit, dataKeys, dataValues), nil
 }

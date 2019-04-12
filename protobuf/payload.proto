@@ -73,10 +73,8 @@ message CallTx {
     bytes AccountProof = 6 [(gogoproto.customtype) = "github.com/hyperledger/burrow/proofs.Proof"];
     // Proof that account has storage
     bytes StorageProof = 7 [(gogoproto.customtype) = "github.com/hyperledger/burrow/proofs.Proof"];
-    // List of storageOpcodes
-    bytes StorageOpCodes = 8;
     // Signatures from validators
-    bytes SignedHeader = 9 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
+    bytes SignedHeader = 8 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
 }
 
 // A payment between two sets of parties

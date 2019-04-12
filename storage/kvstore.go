@@ -53,6 +53,7 @@ type KVReader interface {
 	Has(key []byte) bool
 	// Returns the key with a proof
 	GetWithProof(key []byte) ([]byte, *iavl.RangeProof, error)
+	GetRangeWithProof([]byte, []byte, int) ([][]byte, [][]byte, *iavl.RangeProof, error)
 	Hash() []byte
 }
 

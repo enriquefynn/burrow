@@ -216,6 +216,10 @@ func (ps *prefixKVStore) GetWithProof(key []byte) ([]byte, *iavl.RangeProof, err
 	return ps.source.GetWithProof(ps.prefix.Key(key))
 }
 
+func (ps *prefixKVStore) GetRangeWithProof(startKey []byte, endKey []byte, limit int) ([][]byte, [][]byte, *iavl.RangeProof, error) {
+	return ps.source.GetRangeWithProof(startKey, endKey, limit)
+}
+
 func (ps *prefixKVStore) Hash() []byte {
 	return ps.source.Hash()
 }

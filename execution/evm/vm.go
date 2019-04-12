@@ -166,7 +166,7 @@ func (vm *VM) Call(callState Interface, eventSink EventSink, caller, callee cryp
 // Recreates the contract storage
 // executes move2 function in addr
 func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Address, accountProof, storageProof *proofs.Proof,
-	storageOpcodes, input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
+	input []byte, value uint64, gas *uint64) (output []byte, err errors.CodedError) {
 
 	// Assume blockRoot is valid at this point
 	// Verify proof according to blockRoot
@@ -179,27 +179,24 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 		return nil, errors.ErrorInvalidProof
 	}
 
-	var keys Words256
-	var values Words256
-	// Assume ordered
-	for i := 0; i < len(storageOpcodes); i += 64 {
-		keys = append(keys, RightPadWord256(storageOpcodes[i:i+32]))
-		values = append(values, RightPadWord256(storageOpcodes[i+32:i+64]))
-	}
-
-	account, _ := acm.Decode(accountProof.DataValue)
+	account, _ := acm.Decode(accountProof.DataValues[0])
 	if account.ShardID != vm.params.ShardID {
 		return nil, errors.ErrorCodeWrongShardExecution
 	}
 	callState.CreateMovedAccount(account)
 
-	// TODO SHARDING: Can check if the storage is the same later in the end
-	isValidProof = storageProof.VerifyStorageRoot(keys, values)
+	isValidProof = storageProof.Verify()
 	if isValidProof != nil {
 		log.Warnf("Invalid storage proof: %v", isValidProof)
-		return nil, errors.ErrorInvalidProof
+		// return nil, errors.ErrorInvalidProof
 	}
 
+	var keys Words256
+	var values Words256
+	for i := 0; i < len(storageProof.DataKeys); i++ {
+		keys = append(keys, RightPadWord256(storageProof.DataKeys[i]))
+		values = append(values, RightPadWord256(storageProof.DataValues[i]))
+	}
 	for i := range keys {
 		// log.Infof("Recreating: %x %x at %v\n", keys[i], values[i], account.Address)
 		callState.SetStorage(account.Address, keys[i], values[i])

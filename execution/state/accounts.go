@@ -7,6 +7,7 @@ import (
 	"github.com/hyperledger/burrow/acm/acmstate"
 	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/crypto"
+	"github.com/hyperledger/burrow/storage"
 )
 
 // Returns nil if account does not exist with given address.
@@ -109,6 +110,11 @@ func (s *ReadState) GetStorage(address crypto.Address, key binary.Word256) (bina
 		return binary.Zero256, err
 	}
 	return binary.LeftPadWord256(tree.Get(keyFormat.KeyNoPrefix(key))), nil
+}
+
+func (s *ReadState) GetTree(address crypto.Address) (storage.KVCallbackIterableReader, error) {
+	keyFormat := keys.Storage.Fix(address)
+	return s.Forest.Reader(keyFormat.Prefix())
 }
 
 func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word256) error {

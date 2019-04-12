@@ -95,7 +95,7 @@ func (rwt *RWTree) Dump() string {
 }
 
 func AddTreePrintTree(edge string, tree treeprint.Tree, rwt KVCallbackIterableReader) {
-	tree = tree.AddBranch(fmt.Sprintf("%x", edge))
+	tree = tree.AddBranch(fmt.Sprintf("%v", edge))
 	rwt.Iterate(nil, nil, true, func(key []byte, value []byte) error {
 		tree.AddNode(fmt.Sprintf("%x -> %x", string(key), string(value)))
 		return nil
