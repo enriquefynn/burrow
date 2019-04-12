@@ -66,7 +66,7 @@ func (dp *Dependencies) AddDependency(tx *TxResponse) bool {
 }
 
 // AddDependency add a dependency and return if is allowed to send tx
-func (dp *Dependencies) AddDependencyWithMoves(tx *TxResponse, part partitioning.Partitioning) bool {
+func (dp *Dependencies) AddDependencyWithMoves(tx *TxResponse, part partitioning.Partitioning) []*TxResponse {
 	var partitionToGo int64
 	objectsToMove := make(map[int64]bool) // Objects -> should move to partitionToGo
 	if len(tx.OriginalIds) == 3 {
@@ -118,26 +118,28 @@ func (dp *Dependencies) AddDependencyWithMoves(tx *TxResponse, part partitioning
 	}
 	dp.Length++
 
-	shouldWait := false
+	var txsToSend []*TxResponse
+	sendTx := true
 	for _, dependency := range tx.OriginalIds {
 		originalPartition, _ := part.Get(dependency)
 		if _, ok := dp.idDep[dependency]; !ok {
 			// logrus.Infof("Adding dependency: %v -> %v (%v)", dependency, newNode.tx.methodName, newNode.tx.originalIds)
 			if objectsToMove[dependency] == true {
-				shouldWait = true
+				sendTx = false
 				log.Infof("Have to move %v from partition %v to partition %v", dependency, originalPartition, partitionToGo)
 				// Move object
 				dp.Length += 2
 				part.Move(dependency, partitionToGo)
 				// Add move to partitionToGo
 				moves := createMoves(originalPartition, partitionToGo, dependency, tx.Tx.Input.Amount)
+				txsToSend = append(txsToSend, moves.tx)
 				dp.idDep[dependency] = moves
 				moves.child[dependency].child[dependency] = newNode
 			} else {
 				dp.idDep[dependency] = newNode
 			}
 		} else {
-			shouldWait = true
+			sendTx = false
 			father := dp.idDep[dependency]
 			// "recursive" insert dependency
 			for {
@@ -160,7 +162,10 @@ func (dp *Dependencies) AddDependencyWithMoves(tx *TxResponse, part partitioning
 			}
 		}
 	}
-	return shouldWait
+	if sendTx {
+		txsToSend = append(txsToSend, tx)
+	}
+	return txsToSend
 }
 
 func NewTxResponse(methodName string, originalPartition, originalID int64, amount uint64) *TxResponse {
@@ -242,4 +247,12 @@ func (dp *Dependencies) AddFieldsToMove2(id int64, proofToGoToTx []map[int64][]*
 	dep.tx.Tx.StorageProof = &proofs.StorageProof
 	// Add proof and request for signer to ProofToGoTxResponse
 	proofToGoToTx[partitionID][height+2] = append(proofToGoToTx[partitionID][height+2], dep.tx)
+}
+
+func (dp *Dependencies) Print() {
+	fmt.Printf("IDS: ")
+	for id := range dp.idDep {
+		fmt.Printf("[%p] (%v %v %v) ", dp.idDep[id], id, dp.idDep[id].tx.MethodName, dp.idDep[id].tx.OriginalIds)
+	}
+	fmt.Printf("\n")
 }
