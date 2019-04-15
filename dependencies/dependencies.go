@@ -37,6 +37,7 @@ func NewDependencies() *Dependencies {
 
 // AddDependency add a dependency and return if is allowed to send tx
 func (dp *Dependencies) AddDependency(tx *TxResponse) bool {
+	tx.ChainID = "1"
 	newNode := &Node{
 		tx:    tx,
 		child: make(map[int64]*Node),
@@ -126,7 +127,7 @@ func (dp *Dependencies) AddDependencyWithMoves(tx *TxResponse, part partitioning
 			// logrus.Infof("Adding dependency: %v -> %v (%v)", dependency, newNode.tx.methodName, newNode.tx.originalIds)
 			if objectsToMove[dependency] == true {
 				sendTx = false
-				log.Infof("Have to move %v from partition %v to partition %v", dependency, originalPartition, partitionToGo)
+				// log.Infof("Have to move %v from partition %v to partition %v", dependency, originalPartition, partitionToGo)
 				// Move object
 				dp.Length += 2
 				part.Move(dependency, partitionToGo)
@@ -147,7 +148,7 @@ func (dp *Dependencies) AddDependencyWithMoves(tx *TxResponse, part partitioning
 					// logrus.Infof("Adding dependency: %v (%v) -> %v (%v)", father, father.tx.methodName, newNode.tx.methodName, newNode.tx.originalIds)
 					if objectsToMove[dependency] == true {
 						// Move object
-						log.Infof("Have to move %v from partition %v to partition %v!", dependency, originalPartition, partitionToGo)
+						// log.Infof("Have to move %v from partition %v to partition %v!", dependency, originalPartition, partitionToGo)
 						dp.Length += 2
 						part.Move(dependency, partitionToGo)
 						// Should move
@@ -247,12 +248,4 @@ func (dp *Dependencies) AddFieldsToMove2(id int64, proofToGoToTx []map[int64][]*
 	dep.tx.Tx.StorageProof = &proofs.StorageProof
 	// Add proof and request for signer to ProofToGoTxResponse
 	proofToGoToTx[partitionID][height+2] = append(proofToGoToTx[partitionID][height+2], dep.tx)
-}
-
-func (dp *Dependencies) Print() {
-	fmt.Printf("IDS: ")
-	for id := range dp.idDep {
-		fmt.Printf("[%p] (%v %v %v) ", dp.idDep[id], id, dp.idDep[id].tx.MethodName, dp.idDep[id].tx.OriginalIds)
-	}
-	fmt.Printf("\n")
 }
