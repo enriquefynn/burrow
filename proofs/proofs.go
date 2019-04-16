@@ -22,6 +22,7 @@ func NewShardProof(accountProof, storageProof *Proof) *ShardProof {
 }
 
 type Proof struct {
+	Version     int64
 	CommitProof *iavl.RangeProof
 	DataProof   *iavl.RangeProof
 	CommitValue []byte
@@ -29,8 +30,9 @@ type Proof struct {
 	DataKeys    [][]byte
 }
 
-func NewProof(commitProof, dataProof *iavl.RangeProof, commitValue []byte, dataKeys, dataValues [][]byte) *Proof {
+func NewProof(commitProof, dataProof *iavl.RangeProof, commitValue []byte, dataKeys, dataValues [][]byte, version int64) *Proof {
 	return &Proof{
+		Version:     version,
 		CommitProof: commitProof,
 		DataProof:   dataProof,
 		CommitValue: commitValue,

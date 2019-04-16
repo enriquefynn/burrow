@@ -1,8 +1,6 @@
 package storage
 
 import (
-	"bytes"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/tendermint/iavl"
@@ -157,10 +155,6 @@ func (muf *MutableForest) Version() int64 {
 
 func (muf *MutableForest) saveTree(prefix []byte, tree *RWTree) error {
 	hash, version, err := tree.Save()
-	byteeq, _ := hex.DecodeString("737e915abe451c9ba3c5a070cd8cdad5dbd6f051a2")
-	if bytes.Equal(prefix, byteeq) {
-		fmt.Printf("DUMP(%x, version: %v) hash: %x: %v\n", prefix, version, hash, tree.Dump())
-	}
 	if err != nil {
 		return fmt.Errorf("MutableForest.saveTree() could not save tree: %v", err)
 	}
