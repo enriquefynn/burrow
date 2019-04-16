@@ -335,6 +335,7 @@ func (s *State) getKeyWithProof(prefix []byte, address crypto.Address) (*proofs.
 	var dataValues [][]byte
 	var dataKeys [][]byte
 	var dataProof *iavl.RangeProof
+	version := s.writeState.forest.Version()
 	commit, commitProof, err := s.writeState.forest.GetCommitProof(prefix)
 	// fmt.Printf("Dump: %v\n", s.writeState.forest.Dump())
 
@@ -359,5 +360,5 @@ func (s *State) getKeyWithProof(prefix []byte, address crypto.Address) (*proofs.
 			return nil, err
 		}
 	}
-	return proofs.NewProof(commitProof, dataProof, commit, dataKeys, dataValues), nil
+	return proofs.NewProof(commitProof, dataProof, commit, dataKeys, dataValues, version), nil
 }
