@@ -8,6 +8,7 @@ import (
 	"github.com/hyperledger/burrow/acm/acmstate"
 	"github.com/hyperledger/burrow/acm/validator"
 	"github.com/hyperledger/burrow/bcm"
+	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/consensus/tendermint"
 	"github.com/hyperledger/burrow/event"
 	"github.com/hyperledger/burrow/event/query"
@@ -247,9 +248,27 @@ func (qs *queryServer) streamSignedHeaders(ctx context.Context, blockRange *rpce
 				Commit: commit,
 				Header: &header,
 			}
+			var txExecutions []*TxExecution
+			for _, tx := range block.TxExecutions {
+				txExec := &TxExecution{
+					TxHash: tx.TxHash,
+				}
+				var txLogData []binary.HexBytes
+				for _, tlog := range tx.Events {
+					if tlog.Log != nil {
+						txLogData = append(txLogData, tlog.Log.Data)
+					}
+				}
+				txExec.LogData = txLogData
+
+				// txExec.Exception = tx.Exception
+
+				txExecutions = append(txExecutions, txExec)
+			}
+
 			signedHeadersResult := SignedHeadersResult{
 				SignedHeader: &signedHeader,
-				TxExecutions: block.TxExecutions,
+				TxExecutions: txExecutions,
 			}
 			err = consumer(&signedHeadersResult)
 			if err != nil {

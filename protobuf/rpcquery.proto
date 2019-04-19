@@ -12,7 +12,7 @@ import "validator.proto";
 import "rpc.proto";
 import "payload.proto";
 import "rpcevents.proto";
-import "exec.proto";
+import "errors.proto";
 
 option (gogoproto.marshaler_all) = true;
 option (gogoproto.unmarshaler_all) = true;
@@ -42,9 +42,16 @@ service Query {
     rpc ListSignedHeaders(rpcevents.BlocksRequest) returns (stream SignedHeadersResult);
 }
 
+message TxExecution {
+    bytes TxHash = 1 [(gogoproto.customtype) = "github.com/hyperledger/burrow/binary.HexBytes", (gogoproto.nullable) = false];
+    repeated bytes LogData = 2 [(gogoproto.customtype) = "github.com/hyperledger/burrow/binary.HexBytes", (gogoproto.nullable) = false];
+    errors.Exception Exception = 3;
+}
+
 message SignedHeadersResult {
     bytes SignedHeader = 1 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
-    repeated exec.TxExecution TxExecutions = 2;
+    // repeated exec.TxExecution TxExecutions = 2;
+    repeated TxExecution TxExecutions = 2;
 }
 
 message StatusParam {

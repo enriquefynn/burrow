@@ -29,6 +29,8 @@ service Transact {
     rpc BroadcastTxSync (TxEnvelopeParam) returns (exec.TxExecution);
     // Broadcast a transaction to the mempool - if the transaction is not signed signing will be attempted server-side
     rpc BroadcastTxAsync (TxEnvelopeParam) returns (txs.Receipt);
+    // Batch send and receive
+    rpc BroadcastBatchAsync (TxEnvelopeBatchParam) returns (ReceiptBatch);
 
     // Sign transaction server-side
     rpc SignTx (TxEnvelopeParam) returns (TxEnvelope);
@@ -64,6 +66,15 @@ message CallCodeParam {
 
 message TxEnvelope {
     txs.Envelope Envelope = 1 [(gogoproto.customtype) = "github.com/hyperledger/burrow/txs.Envelope"];
+}
+
+// For Batch transactions
+message TxEnvelopeBatchParam {
+    repeated txs.Envelope Envelope = 1 [(gogoproto.customtype) = "github.com/hyperledger/burrow/txs.Envelope", (gogoproto.nullable) = false];
+    google.protobuf.Duration Timeout = 2 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+}
+message ReceiptBatch {
+    repeated txs.Receipt Receipts = 1; 
 }
 
 message TxEnvelopeParam {
