@@ -158,7 +158,7 @@ func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error)
 			Permissions: perm,
 			ShardID:     shardID,
 		}
-		err := s.writeState.UpdateAccount(acc)
+		err := s.writeState.UpdateAccount(acc, false)
 		if err != nil {
 			return nil, fmt.Errorf("%s %v", errHeader, err)
 		}
@@ -182,7 +182,7 @@ func MakeGenesisState(db dbm.DB, genesisDoc *genesis.GenesisDoc) (*State, error)
 		Permissions: globalPerms,
 		ShardID:     shardID,
 	}
-	err = s.writeState.UpdateAccount(permsAcc)
+	err = s.writeState.UpdateAccount(permsAcc, false)
 	if err != nil {
 		return nil, fmt.Errorf("%s %v", errHeader, err)
 	}
@@ -319,6 +319,8 @@ func (s *State) GetKeyFormat() KeyFormatStore {
 
 // GetKeyWithProof returns the data plus a proof of its inclusion in the tree
 func (s *State) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
+	// s.Lock()
+	// defer s.Unlock()
 	accountProof, err := s.getKeyWithProof(keys.Account.Prefix(), address)
 	if err != nil {
 		return nil, err

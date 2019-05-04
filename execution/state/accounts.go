@@ -8,6 +8,7 @@ import (
 	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/crypto"
 	"github.com/hyperledger/burrow/storage"
+	"github.com/sirupsen/logrus"
 )
 
 // Returns nil if account does not exist with given address.
@@ -43,7 +44,7 @@ func (ws *writeState) statsRemoveAccount(acc *acm.Account) {
 	}
 }
 
-func (ws *writeState) UpdateAccount(account *acm.Account) error {
+func (ws *writeState) UpdateAccount(account *acm.Account, moved bool) error {
 	if account == nil {
 		return fmt.Errorf("UpdateAccount passed nil account in State")
 	}
@@ -58,6 +59,9 @@ func (ws *writeState) UpdateAccount(account *acm.Account) error {
 	updated := tree.Set(keys.Account.KeyNoPrefix(account.Address), encodedAccount)
 	if updated {
 		ws.statsAddAccount(account)
+	}
+	if moved {
+		ws.removePreviousStorage(account.GetAddress())
 	}
 	return nil
 }
@@ -115,6 +119,19 @@ func (s *ReadState) GetStorage(address crypto.Address, key binary.Word256) (bina
 func (s *ReadState) GetTree(address crypto.Address) (storage.KVCallbackIterableReader, error) {
 	keyFormat := keys.Storage.Fix(address)
 	return s.Forest.Reader(keyFormat.Prefix())
+}
+
+func (ws *writeState) removePreviousStorage(address crypto.Address) error {
+	keyFormat := keys.Storage.Fix(address)
+	tree, err := ws.forest.Writer(keyFormat.Prefix())
+	if err != nil {
+		logrus.Warnf("ERROR: %v", err)
+		return err
+	}
+	return tree.Iterate(nil, nil, true, func(key, value []byte) error {
+		tree.Delete(key)
+		return nil
+	})
 }
 
 func (ws *writeState) SetStorage(address crypto.Address, key, value binary.Word256) error {

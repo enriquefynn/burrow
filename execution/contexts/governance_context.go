@@ -134,7 +134,7 @@ func (ctx *GovernanceContext) UpdateAccount(account *acm.Account, update *spec.T
 	if err != nil {
 		return
 	}
-	err = ctx.StateWriter.UpdateAccount(account)
+	err = ctx.StateWriter.UpdateAccount(account, false)
 	return
 }
 

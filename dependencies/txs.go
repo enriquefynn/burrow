@@ -17,17 +17,19 @@ type SeqAccount struct {
 }
 
 type Accounts struct {
-	AccountMap    map[common.Address]*SeqAccount
-	AllowedMap    map[crypto.Address]map[int64]common.Address
-	TokenOwnerMap map[int64]common.Address
-	lastAccountID int
+	AccountMap             map[common.Address]*SeqAccount
+	AllowedMap             map[crypto.Address]map[int64]common.Address
+	TokenOwnerMap          map[int64]common.Address
+	TransientTokenOwnerMap map[crypto.Address]common.Address
+	lastAccountID          int
 }
 
 func NewAccounts() Accounts {
 	return Accounts{
-		AccountMap:    make(map[common.Address]*SeqAccount),
-		AllowedMap:    make(map[crypto.Address]map[int64]common.Address),
-		TokenOwnerMap: make(map[int64]common.Address),
+		AccountMap:             make(map[common.Address]*SeqAccount),
+		AllowedMap:             make(map[crypto.Address]map[int64]common.Address),
+		TokenOwnerMap:          make(map[int64]common.Address),
+		TransientTokenOwnerMap: make(map[crypto.Address]common.Address),
 	}
 }
 

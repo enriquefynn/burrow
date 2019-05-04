@@ -205,6 +205,38 @@ func (trans *Transactor) SignTx(txEnv *txs.Envelope) (*txs.Envelope, error) {
 	return txEnv, nil
 }
 
+func (trans *Transactor) CheckTxSyncRawMultiple(ctx context.Context, txBytes []byte) (*txs.Receipt, error) {
+	responseCh := make(chan *abciTypes.Response, 1)
+	err := trans.CheckTxAsyncRaw(txBytes, func(res *abciTypes.Response) {
+		responseCh <- res
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("waiting for CheckTx response in CheckTxSyncRaw: %v", ctx.Err())
+	case response := <-responseCh:
+		checkTxResponse := response.GetCheckTx()
+		if checkTxResponse == nil {
+			return nil, fmt.Errorf("application did not return CheckTx response")
+		}
+
+		switch checkTxResponse.Code {
+		case codes.TxExecutionSuccessCode:
+			receipt, err := txs.DecodeReceipt(checkTxResponse.Data)
+			if err != nil {
+				return nil, fmt.Errorf("could not deserialise transaction receipt: %s", err)
+			}
+			return receipt, nil
+		default:
+			return nil, errors.ErrorCodef(errors.Code(checkTxResponse.Code),
+				"error returned by Tendermint in BroadcastTxSync ABCI log: %v", checkTxResponse.Log)
+		}
+	}
+}
+
 func (trans *Transactor) CheckTxSyncRaw(ctx context.Context, txBytes []byte) (*txs.Receipt, error) {
 	responseCh := make(chan *abciTypes.Response, 3)
 	err := trans.CheckTxAsyncRaw(txBytes, func(res *abciTypes.Response) {
@@ -229,6 +261,7 @@ func (trans *Transactor) CheckTxSyncRaw(ctx context.Context, txBytes []byte) (*t
 			if err != nil {
 				return nil, fmt.Errorf("could not deserialise transaction receipt: %s", err)
 			}
+			// logrus.Infof("CheckTxSyncRaw TIME: %v", time.Since(start).Seconds())
 			return receipt, nil
 		default:
 			return nil, errors.ErrorCodef(errors.Code(checkTxResponse.Code),

@@ -67,7 +67,7 @@ func (ctx *SendContext) Execute(txe *exec.TxExecution, p payload.Payload) error 
 	}
 
 	for _, acc := range accounts {
-		err = ctx.StateWriter.UpdateAccount(acc)
+		err = ctx.StateWriter.UpdateAccount(acc, false)
 		if err != nil {
 			return err
 		}

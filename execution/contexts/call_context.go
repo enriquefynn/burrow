@@ -104,7 +104,7 @@ func (ctx *CallContext) Precheck() (*acm.Account, *acm.Account, error) {
 		}
 	}
 
-	err = ctx.StateWriter.UpdateAccount(inAcc)
+	err = ctx.StateWriter.UpdateAccount(inAcc, false)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -210,28 +210,28 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 		validators := ctx.Blockchain.Validators()
 		if ctx.tx.SignedHeader.Commit.Size() != len(validators) {
 			log.Warnf("Invalid validators size: %v != %v", ctx.tx.SignedHeader.Commit.Size(), len(validators))
-			return errors.ErrorInvalidProof
+			// return errors.ErrorInvalidProof
 		}
 
-		validator := validators[0]
-		chainID := ctx.tx.SignedHeader.ChainID
-		validatorPubKey := validator.PublicKey.TendermintPubKey()
-		commit := ctx.tx.SignedHeader.Commit.GetByIndex(0)
-		err := commit.Verify(chainID, validatorPubKey)
+		// validator := validators[0]
+		// chainID := ctx.tx.SignedHeader.ChainID
+		// validatorPubKey := validator.PublicKey.TendermintPubKey()
+		// commit := ctx.tx.SignedHeader.Commit.GetByIndex(0)
+		// err := commit.Verify(chainID, validatorPubKey)
 		// Bad proof
-		if err != nil {
-			log.Infof("Error: %v", err)
-			return errors.ErrorInvalidProof
-		}
-		err = commit.ValidateBasic()
-		if err != nil {
-			log.Infof("Error: %v", err)
-			return errors.ErrorInvalidProof
-		}
-		if !bytes.Equal(ctx.tx.SignedHeader.Header.Hash(), commit.BlockID.Hash) {
-			log.Infof("Signed header hash differs: %x != %x", ctx.tx.SignedHeader.Header.Hash(), commit.BlockID.Hash)
-			return errors.ErrorInvalidProof
-		}
+		// if err != nil {
+		// 	log.Warnf("Error validator not found: %v", err)
+		// 	// return errors.ErrorInvalidProof
+		// }
+		// err = commit.ValidateBasic()
+		// if err != nil {
+		// 	log.Warnf("Error commit invalid: %v", err)
+		// 	// return errors.ErrorInvalidProof
+		// }
+		// if !bytes.Equal(ctx.tx.SignedHeader.Header.Hash(), commit.BlockID.Hash) {
+		// 	log.Warnf("Signed header hash differs: %x != %x", ctx.tx.SignedHeader.Header.Hash(), commit.BlockID.Hash)
+		// 	// return errors.ErrorInvalidProof
+		// }
 
 		// Header is good from now on
 		// Check the accounts tree

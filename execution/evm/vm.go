@@ -173,13 +173,13 @@ func (vm *VM) Move2(callState Interface, eventSink EventSink, caller crypto.Addr
 	if accountProof == nil || storageProof == nil {
 		return nil, errors.ErrorInvalidProof
 	}
+	account, _ := acm.Decode(accountProof.DataValues[0])
 	isValidProof := accountProof.Verify()
 	if isValidProof != nil {
-		log.Warnf("Invalid account proof: %v", isValidProof)
+		log.Warnf("Invalid account proof: %v from %v acc: %v", isValidProof, caller, account.Address)
 		// return nil, errors.ErrorInvalidProof
 	}
 
-	account, _ := acm.Decode(accountProof.DataValues[0])
 	if account.ShardID != vm.params.ShardID {
 		return nil, errors.ErrorCodeWrongShardExecution
 	}

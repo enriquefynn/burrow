@@ -43,7 +43,7 @@ func (fas *FakeAppState) GetAccountWithProof(address crypto.Address) (*proofs.Sh
 	return nil, nil
 }
 
-func (fas *FakeAppState) UpdateAccount(account *acm.Account) error {
+func (fas *FakeAppState) UpdateAccount(account *acm.Account, moved bool) error {
 	fas.accounts[account.GetAddress()] = account
 	return nil
 }

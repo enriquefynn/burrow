@@ -182,7 +182,8 @@ var cdc = amino.NewCodec()
 
 func (bc *Blockchain) Encode() ([]byte, error) {
 	persistedState := &PersistedState{
-		GenesisDoc:            bc.genesisDoc,
+		// TODO: DANGEROUS: IDK IF IT WORKS
+		// GenesisDoc:            bc.genesisDoc,
 		AppHashAfterLastBlock: bc.appHashAfterLastBlock,
 		LastBlockHeight:       bc.lastBlockHeight,
 	}

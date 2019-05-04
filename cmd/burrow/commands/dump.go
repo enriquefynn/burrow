@@ -71,7 +71,7 @@ func Dump(output Output) func(cmd *cli.Cmd) {
 
 					// update our temporary state
 					if resp.Account != nil {
-						ws.UpdateAccount(resp.Account)
+						ws.UpdateAccount(resp.Account, false)
 					}
 					if resp.AccountStorage != nil {
 						for _, storage := range resp.AccountStorage.Storage {

@@ -23,7 +23,7 @@ type AccountIterable interface {
 type AccountUpdater interface {
 	// Updates the fields of updatedAccount by address, creating the account
 	// if it does not exist
-	UpdateAccount(updatedAccount *acm.Account) error
+	UpdateAccount(updatedAccount *acm.Account, movedAccount bool) error
 	// Remove the account at address
 	RemoveAccount(address crypto.Address) error
 }

@@ -432,7 +432,7 @@ func (exe *executor) updateSignatories(txEnv *txs.Envelope) error {
 			"old_sequence", acc.Sequence,
 			"new_sequence", acc.Sequence+1)
 		acc.Sequence++
-		err = exe.stateCache.UpdateAccount(acc)
+		err = exe.stateCache.UpdateAccount(acc, false)
 		if err != nil {
 			return fmt.Errorf("error updating account after setting public key: %v", err)
 		}

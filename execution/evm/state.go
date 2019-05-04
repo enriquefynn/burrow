@@ -180,11 +180,12 @@ func (st *State) CreateAccount(address crypto.Address, shardID uint64) {
 			"tried to create an account at an address that already exists: %v", address))
 		return
 	}
-	st.updateAccount(&acm.Account{Address: address, ShardID: shardID})
+	st.updateAccount(&acm.Account{Address: address, ShardID: shardID}, false)
 }
 
 func (st *State) CreateMovedAccount(account *acm.Account) {
-	st.updateAccount(account)
+	st.cache.SetMovedAccount(account)
+	st.updateAccount(account, true)
 }
 
 func (st *State) InitCode(address crypto.Address, code []byte) {
@@ -200,7 +201,7 @@ func (st *State) InitCode(address crypto.Address, code []byte) {
 		return
 	}
 	acc.Code = code
-	st.updateAccount(acc)
+	st.updateAccount(acc, false)
 }
 
 func (st *State) RemoveAccount(address crypto.Address) {
@@ -261,7 +262,7 @@ func (st *State) AddRole(address crypto.Address, role string) bool {
 		return false
 	}
 	added := acc.Permissions.AddRole(role)
-	st.updateAccount(acc)
+	st.updateAccount(acc, false)
 	return added
 }
 
@@ -271,7 +272,7 @@ func (st *State) RemoveRole(address crypto.Address, role string) bool {
 		return false
 	}
 	removed := acc.Permissions.RemoveRole(role)
-	st.updateAccount(acc)
+	st.updateAccount(acc, false)
 	return removed
 }
 
@@ -286,7 +287,7 @@ func (st *State) GetBlockHash(height uint64) (binary.Word256, error) {
 func (st *State) SetShard(address crypto.Address, shardID uint64) {
 	acc := st.mustAccount(address)
 	acc.ShardID = shardID
-	st.updateAccount(acc)
+	st.updateAccount(acc, false)
 }
 
 // Helpers
@@ -308,8 +309,8 @@ func (st *State) mustAccount(address crypto.Address) *acm.Account {
 	return acc
 }
 
-func (st *State) updateAccount(account *acm.Account) {
-	err := st.cache.UpdateAccount(account)
+func (st *State) updateAccount(account *acm.Account, moved bool) {
+	err := st.cache.UpdateAccount(account, moved)
 	if err != nil {
 		st.PushError(err)
 	}

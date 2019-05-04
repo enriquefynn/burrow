@@ -41,6 +41,7 @@ type accountInfo struct {
 	storage map[binary.Word256]binary.Word256
 	removed bool
 	updated bool
+	moved   bool
 }
 
 type CacheOption func(*Cache) *Cache
@@ -88,7 +89,7 @@ func (cache *Cache) GetAccountWithProof(address crypto.Address) (*proofs.ShardPr
 	return nil, nil
 }
 
-func (cache *Cache) UpdateAccount(account *acm.Account) error {
+func (cache *Cache) UpdateAccount(account *acm.Account, moved bool) error {
 	if account == nil {
 		return errors.ErrorCodef(errors.ErrorCodeIllegalWrite, "UpdateAccount called with nil account")
 	}
@@ -107,6 +108,7 @@ func (cache *Cache) UpdateAccount(account *acm.Account) error {
 	}
 	accInfo.account = account.Copy()
 	accInfo.updated = true
+	accInfo.moved = moved
 	return nil
 }
 
@@ -124,6 +126,17 @@ func (cache *Cache) RemoveAccount(address crypto.Address) error {
 		return fmt.Errorf("RemoveAccount on a removed account: %s", address)
 	}
 	accInfo.removed = true
+	return nil
+}
+
+func (cache *Cache) SetMovedAccount(account *acm.Account) error {
+	accInfo, err := cache.get(account.GetAddress())
+	if err != nil {
+		return err
+	}
+	accInfo.Lock()
+	defer accInfo.Unlock()
+	accInfo.moved = true
 	return nil
 }
 
@@ -234,7 +247,7 @@ func (cache *Cache) Sync(st Writer) error {
 			}
 		} else if accInfo.updated {
 			// First update account in case it needs to be created
-			err := st.UpdateAccount(accInfo.account)
+			err := st.UpdateAccount(accInfo.account, accInfo.moved)
 			if err != nil {
 				return err
 			}

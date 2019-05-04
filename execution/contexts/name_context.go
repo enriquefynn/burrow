@@ -170,7 +170,7 @@ func (ctx *NameContext) Execute(txe *exec.TxExecution, p payload.Payload) error 
 		return errors.ErrorCodef(errors.ErrorCodeInsufficientFunds,
 			"Input account does not have sufficient balance to cover input amount: %v", ctx.tx.Input)
 	}
-	err = ctx.StateWriter.UpdateAccount(inAcc)
+	err = ctx.StateWriter.UpdateAccount(inAcc, false)
 	if err != nil {
 		return err
 	}

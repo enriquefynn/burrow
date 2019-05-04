@@ -79,7 +79,7 @@ func (s *State) LoadDump(reader DumpReader) error {
 
 		if row.Account != nil {
 			if row.Account.Address != acm.GlobalPermissionsAddress {
-				s.writeState.UpdateAccount(row.Account)
+				s.writeState.UpdateAccount(row.Account, false)
 			}
 		}
 		if row.AccountStorage != nil {

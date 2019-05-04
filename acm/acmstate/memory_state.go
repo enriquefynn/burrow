@@ -33,7 +33,7 @@ func (ms *MemoryState) GetAccountWithProof(address crypto.Address) (*proofs.Shar
 	return nil, nil
 }
 
-func (ms *MemoryState) UpdateAccount(updatedAccount *acm.Account) error {
+func (ms *MemoryState) UpdateAccount(updatedAccount *acm.Account, moved bool) error {
 	if updatedAccount == nil {
 		return fmt.Errorf("UpdateAccount passed nil account in MemoryState")
 	}

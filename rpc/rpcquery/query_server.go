@@ -20,6 +20,7 @@ import (
 	"github.com/hyperledger/burrow/rpc"
 	rpcevents "github.com/hyperledger/burrow/rpc/rpcevents"
 	"github.com/hyperledger/burrow/txs/payload"
+	"github.com/sirupsen/logrus"
 	"github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -260,6 +261,10 @@ func (qs *queryServer) streamSignedHeaders(ctx context.Context, blockRange *rpce
 					}
 				}
 				txExec.LogData = txLogData
+				if tx.Exception != nil {
+					logrus.Warnf("EXCEPTION: %v", tx.Exception)
+					txExec.Exception = tx.Exception
+				}
 
 				// txExec.Exception = tx.Exception
 

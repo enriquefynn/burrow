@@ -178,7 +178,7 @@ func (ctx *ProposalContext) Execute(txe *exec.TxExecution, p payload.Payload) er
 				return fmt.Errorf("proposal expired, sequence number %d for account %s wrong at step %d", input.Sequence, input.Address, i+1)
 			}
 
-			stateCache.UpdateAccount(acc)
+			stateCache.UpdateAccount(acc, false)
 		}
 	}
 
@@ -216,7 +216,7 @@ func (ctx *ProposalContext) Execute(txe *exec.TxExecution, p payload.Payload) er
 					return fmt.Errorf("proposal expired, sequence number %d for account %s wrong at step %d", input.Sequence, input.Address, i+1)
 				}
 
-				ctx.StateWriter.UpdateAccount(acc)
+				ctx.StateWriter.UpdateAccount(acc, false)
 			}
 
 			if txExecutor, ok := ctx.Contexts[txEnv.Tx.Type()]; ok {

@@ -28,7 +28,7 @@ func getAcccountSequence(seq string, addressStr string, seqCache *acmstate.Cache
 		return "", err
 	}
 	acc.Sequence++
-	err = seqCache.UpdateAccount(acc)
+	err = seqCache.UpdateAccount(acc, false)
 	return fmt.Sprintf("%d", acc.Sequence), err
 }
 

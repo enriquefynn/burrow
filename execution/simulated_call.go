@@ -50,7 +50,7 @@ func CallCodeSim(reader acmstate.Reader, tip bcm.BlockchainInfo, fromAddress, ad
 	err := cache.UpdateAccount(&acm.Account{
 		Address: address,
 		Code:    code,
-	})
+	}, false)
 
 	if err != nil {
 		return nil, err
