@@ -207,10 +207,47 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 	var exception errors.CodedError
 
 	if isMove2 {
-		validators := ctx.Blockchain.Validators()
+		// validators := ctx.Blockchain.Validators()
+		validators := make(map[crypto.Address]crypto.PublicKey)
+		chainID := ctx.tx.SignedHeader.ChainID
+
+		for _, validator := range ctx.Blockchain.Validators() {
+			validators[validator.Address] = validator.PublicKey
+		}
+
 		if ctx.tx.SignedHeader.Commit.Size() != len(validators) {
 			log.Warnf("Invalid validators size: %v != %v", ctx.tx.SignedHeader.Commit.Size(), len(validators))
 			// return errors.ErrorInvalidProof
+		}
+		quorum := 2 * len(validators) / 3
+
+		for i := 0; i < ctx.tx.SignedHeader.Commit.Size(); i++ {
+			commit := ctx.tx.SignedHeader.Commit.GetByIndex(i)
+			validatorAddress, err := crypto.AddressFromBytes(commit.ValidatorAddress[:])
+			if err != nil {
+				log.Warnf("Error trying to get validator key: %v", err)
+				// return errors.ErrorInvalidProof
+			}
+			err = commit.Verify(chainID, validators[validatorAddress].TendermintPubKey())
+			if err != nil {
+				log.Warnf("Error validator not found: %v", err)
+				// return errors.ErrorInvalidProof
+			}
+			err = commit.ValidateBasic()
+			if err != nil {
+				log.Warnf("Error commit invalid: %v", err)
+				// return errors.ErrorInvalidProof
+			}
+
+			if !bytes.Equal(ctx.tx.SignedHeader.Header.Hash(), commit.BlockID.Hash) {
+				log.Warnf("Signed header hash differs: %x != %x", ctx.tx.SignedHeader.Header.Hash(), commit.BlockID.Hash)
+				// return errors.ErrorInvalidProof
+			}
+
+			if i >= quorum {
+				// All right
+				break
+			}
 		}
 
 		// validator := validators[0]
@@ -218,7 +255,7 @@ func (ctx *CallContext) Deliver(inAcc, outAcc *acm.Account, value uint64) error 
 		// validatorPubKey := validator.PublicKey.TendermintPubKey()
 		// commit := ctx.tx.SignedHeader.Commit.GetByIndex(0)
 		// err := commit.Verify(chainID, validatorPubKey)
-		// Bad proof
+		// // Bad proof
 		// if err != nil {
 		// 	log.Warnf("Error validator not found: %v", err)
 		// 	// return errors.ErrorInvalidProof
