@@ -334,7 +334,7 @@ func (c *Client) BroadcastEnvelopeAsync(txEnv *txs.Envelope) (*txs.Receipt, erro
 }
 
 // BroadcastEnvelopeAsync Broadcast envelope async - can be locally signed or remote signing will be attempted
-func (c *Client) BroadcastEnvelopeBatchAsync(txEnv []txs.Envelope) (*rpctransact.ReceiptBatch, error) {
+func (c *Client) BroadcastEnvelopeBatchAsync(txEnv []*txs.Envelope) (*rpctransact.ReceiptBatch, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 

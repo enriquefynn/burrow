@@ -70,7 +70,7 @@ message TxEnvelope {
 
 // For Batch transactions
 message TxEnvelopeBatchParam {
-    repeated txs.Envelope Envelope = 1 [(gogoproto.customtype) = "github.com/hyperledger/burrow/txs.Envelope", (gogoproto.nullable) = false];
+    repeated txs.Envelope Envelope = 1 [(gogoproto.nullable) = true];
     google.protobuf.Duration Timeout = 2 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 }
 message ReceiptBatch {
