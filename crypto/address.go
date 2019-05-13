@@ -205,7 +205,7 @@ func NewContractAddress2(caller Address, salt [binary.Word256Length]byte, initco
 	temp = append(temp, []byte{0xFF}...)
 	temp = append(temp, caller[:]...)
 	temp = append(temp, salt[:]...)
-	temp = append(temp, sha3.Sha3(initcode)...)
+	// temp = append(temp, sha3.Sha3(initcode)...)
 	copy(newAddr[:], sha3.Sha3(temp)[12:])
 	return
 }

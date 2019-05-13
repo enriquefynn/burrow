@@ -317,15 +317,16 @@ func (s *State) GetKeyFormat() KeyFormatStore {
 	return keys
 }
 
-// GetKeyWithProof returns the data plus a proof of its inclusion in the tree
+// GetAccountWithProof returns the data plus a proof of its inclusion in the tree
 func (s *State) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
-	// s.Lock()
+	// s.Lock
 	// defer s.Unlock()
-	accountProof, err := s.getKeyWithProof(keys.Account.Prefix(), address)
+	version := s.writeState.forest.Version()
+	accountProof, err := s.getKeyWithProof(keys.Account.Prefix(), address, version)
 	if err != nil {
 		return nil, err
 	}
-	storageProof, err := s.getKeyWithProof(keys.Storage.Key(address), address)
+	storageProof, err := s.getKeyWithProof(keys.Storage.Key(address), address, version)
 	if err != nil {
 		return nil, err
 	}
@@ -333,13 +334,18 @@ func (s *State) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof,
 }
 
 // getKeyWithProof returns the data plus a proof of its inclusion in the tree
-func (s *State) getKeyWithProof(prefix []byte, address crypto.Address) (*proofs.Proof, error) {
+func (s *State) getKeyWithProof(prefix []byte, address crypto.Address, version int64) (*proofs.Proof, error) {
 	var dataValues [][]byte
 	var dataKeys [][]byte
 	var dataProof *iavl.RangeProof
-	version := s.writeState.forest.Version()
+
+	// s.writeState.forest.Load(version)
+	// commitTree, err := s.Forest.Reader(nil)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// commitTree.Get
 	commit, commitProof, err := s.writeState.forest.GetCommitProof(prefix)
-	// fmt.Printf("Dump: %v\n", s.writeState.forest.Dump())
 
 	if err != nil {
 		return nil, err

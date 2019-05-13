@@ -218,6 +218,11 @@ func (vm *VM) call(callState Interface, eventSink EventSink, caller, callee cryp
 		err = callState.Error()
 	}()
 
+	if callState.GetShardID(callee) != vm.params.ShardID {
+		callState.PushError(errors.ErrorCodef(errors.ErrorCodeExecutionReverted, "call() on moved account"))
+		// return nil, errors.ErrorCodeWrongShardExecution
+	}
+
 	callState.PushError(transfer(callState, caller, callee, value))
 	callState.PushError(vm.ensureStackDepth())
 

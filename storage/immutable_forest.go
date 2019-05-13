@@ -67,6 +67,9 @@ func (imf *ImmutableForest) IterateRWTree(start, end []byte, ascending bool, fn 
 
 // Get the tree at prefix for making reads
 func (imf *ImmutableForest) Reader(prefix []byte) (KVCallbackIterableReader, error) {
+	if prefix == nil {
+		return imf.commitsTree, nil
+	}
 	return imf.tree(prefix)
 }
 
