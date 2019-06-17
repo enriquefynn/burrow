@@ -4,6 +4,7 @@ option go_package = "github.com/hyperledger/burrow/rpc/rpcevents";
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "exec.proto";
+import "errors.proto";
 
 package rpcevents;
 
@@ -28,6 +29,19 @@ service ExecutionEvents {
     // GetEvents provides events streaming one block at a time - that is all events emitted in a particular block
     // are guaranteed to be delivered in each GetEventsResponse
     rpc Events (BlocksRequest) returns (stream EventsResponse);
+    rpc StreamSignedHeaders(BlocksRequest) returns (stream SignedHeadersResult);
+}
+
+message SignedHeadersResult {
+    bytes SignedHeader = 1 [(gogoproto.customtype) = "github.com/tendermint/tendermint/types.SignedHeader"];
+    // repeated exec.TxExecution TxExecutions = 2;
+    repeated TxExecution TxExecutions = 2;
+}
+
+message TxExecution {
+    bytes TxHash = 1 [(gogoproto.customtype) = "github.com/hyperledger/burrow/binary.HexBytes", (gogoproto.nullable) = false];
+    repeated bytes LogData = 2 [(gogoproto.customtype) = "github.com/hyperledger/burrow/binary.HexBytes", (gogoproto.nullable) = false];
+    errors.Exception Exception = 3;
 }
 
 message GetBlockRequest {

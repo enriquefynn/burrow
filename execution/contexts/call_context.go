@@ -117,7 +117,7 @@ func (ctx *CallContext) Check(inAcc *acm.Account, value uint64) error {
 	if err != nil {
 		return err
 	}
-	err = ctx.StateWriter.UpdateAccount(inAcc)
+	err = ctx.StateWriter.UpdateAccount(inAcc, false)
 	if err != nil {
 		return err
 	}

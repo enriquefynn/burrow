@@ -226,7 +226,7 @@ func (st *State) AddToBalance(address crypto.Address, amount uint64) {
 		return
 	}
 	st.PushError(acc.AddToBalance(amount))
-	st.updateAccount(acc)
+	st.updateAccount(acc, false)
 }
 
 func (st *State) SubtractFromBalance(address crypto.Address, amount uint64) {
@@ -235,7 +235,7 @@ func (st *State) SubtractFromBalance(address crypto.Address, amount uint64) {
 		return
 	}
 	st.PushError(acc.SubtractFromBalance(amount))
-	st.updateAccount(acc)
+	st.updateAccount(acc, false)
 }
 
 func (st *State) SetPermission(address crypto.Address, permFlag permission.PermFlag, value bool) {
@@ -244,7 +244,7 @@ func (st *State) SetPermission(address crypto.Address, permFlag permission.PermF
 		return
 	}
 	st.PushError(acc.Permissions.Base.Set(permFlag, value))
-	st.updateAccount(acc)
+	st.updateAccount(acc, false)
 }
 
 func (st *State) UnsetPermission(address crypto.Address, permFlag permission.PermFlag) {
@@ -253,7 +253,7 @@ func (st *State) UnsetPermission(address crypto.Address, permFlag permission.Per
 		return
 	}
 	st.PushError(acc.Permissions.Base.Unset(permFlag))
-	st.updateAccount(acc)
+	st.updateAccount(acc, false)
 }
 
 func (st *State) AddRole(address crypto.Address, role string) bool {

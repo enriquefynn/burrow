@@ -47,6 +47,7 @@ type BlockchainInfo interface {
 	BlockHash(height uint64) []byte
 	// GetBlockHash returns	hash of the specific block
 	GetBlockHeader(blockNumber uint64) (*types.Header, error)
+	GetBlockSignedHeader(height uint64) (*types.SignedHeader, error)
 }
 
 type Blockchain struct {
@@ -291,4 +292,25 @@ func (bc *Blockchain) GetBlockHeader(height uint64) (*types.Header, error) {
 		return nil, fmt.Errorf("%s could not get BlockMeta: %v", errHeader, err)
 	}
 	return &blockMeta.Header, nil
+}
+
+func (bc *Blockchain) GetBlockSignedHeader(height uint64) (*types.SignedHeader, error) {
+	const errHeader = "GetBlockCommit():"
+	if bc == nil {
+		return nil, fmt.Errorf("%s could not get block hash because Blockchain has not been given access to "+
+			"tendermint BlockStore", errHeader)
+	}
+	block, err := bc.blockStore.Block(int64(height))
+	if err != nil {
+		return nil, fmt.Errorf("%s could not get Block: %v", errHeader, err)
+	}
+	header, err := bc.blockStore.Block(int64(height) - 1)
+	if err != nil {
+		return nil, fmt.Errorf("%s could not get Block: %v", errHeader, err)
+	}
+
+	return &types.SignedHeader{
+		Header: &header.Header,
+		Commit: block.LastCommit,
+	}, nil
 }

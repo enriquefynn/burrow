@@ -91,7 +91,3 @@ func (tr *TxResponse) Sign() *txs.Envelope {
 	env.Sign(tr.Signer.Account)
 	return env
 }
-
-// type SignedHeader struct {
-
-// }

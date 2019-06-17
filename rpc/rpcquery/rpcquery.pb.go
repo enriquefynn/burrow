@@ -10,15 +10,12 @@ import math "math"
 import _ "github.com/gogo/protobuf/gogoproto"
 import acm "github.com/hyperledger/burrow/acm"
 import validator "github.com/hyperledger/burrow/acm/validator"
-import errors "github.com/hyperledger/burrow/execution/errors"
 import names "github.com/hyperledger/burrow/execution/names"
 import rpc "github.com/hyperledger/burrow/rpc"
-import rpcevents "github.com/hyperledger/burrow/rpc/rpcevents"
 import payload "github.com/hyperledger/burrow/txs/payload"
 
-import github_com_hyperledger_burrow_binary "github.com/hyperledger/burrow/binary"
-import github_com_tendermint_tendermint_types "github.com/tendermint/tendermint/types"
 import github_com_hyperledger_burrow_crypto "github.com/hyperledger/burrow/crypto"
+import github_com_hyperledger_burrow_binary "github.com/hyperledger/burrow/binary"
 import github_com_hyperledger_burrow_proofs "github.com/hyperledger/burrow/proofs"
 
 import (
@@ -40,112 +37,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-type TxExecution struct {
-	TxHash               github_com_hyperledger_burrow_binary.HexBytes   `protobuf:"bytes,1,opt,name=TxHash,proto3,customtype=github.com/hyperledger/burrow/binary.HexBytes" json:"TxHash"`
-	LogData              []github_com_hyperledger_burrow_binary.HexBytes `protobuf:"bytes,2,rep,name=LogData,customtype=github.com/hyperledger/burrow/binary.HexBytes" json:"LogData"`
-	Exception            *errors.Exception                               `protobuf:"bytes,3,opt,name=Exception" json:"Exception,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                                        `json:"-"`
-	XXX_unrecognized     []byte                                          `json:"-"`
-	XXX_sizecache        int32                                           `json:"-"`
-}
-
-func (m *TxExecution) Reset()         { *m = TxExecution{} }
-func (m *TxExecution) String() string { return proto.CompactTextString(m) }
-func (*TxExecution) ProtoMessage()    {}
-func (*TxExecution) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{0}
-}
-func (m *TxExecution) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *TxExecution) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_TxExecution.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (dst *TxExecution) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TxExecution.Merge(dst, src)
-}
-func (m *TxExecution) XXX_Size() int {
-	return m.Size()
-}
-func (m *TxExecution) XXX_DiscardUnknown() {
-	xxx_messageInfo_TxExecution.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_TxExecution proto.InternalMessageInfo
-
-func (m *TxExecution) GetException() *errors.Exception {
-	if m != nil {
-		return m.Exception
-	}
-	return nil
-}
-
-func (*TxExecution) XXX_MessageName() string {
-	return "rpcquery.TxExecution"
-}
-
-type SignedHeadersResult struct {
-	SignedHeader *github_com_tendermint_tendermint_types.SignedHeader `protobuf:"bytes,1,opt,name=SignedHeader,proto3,customtype=github.com/tendermint/tendermint/types.SignedHeader" json:"SignedHeader,omitempty"`
-	// repeated exec.TxExecution TxExecutions = 2;
-	TxExecutions         []*TxExecution `protobuf:"bytes,2,rep,name=TxExecutions" json:"TxExecutions,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
-	XXX_unrecognized     []byte         `json:"-"`
-	XXX_sizecache        int32          `json:"-"`
-}
-
-func (m *SignedHeadersResult) Reset()         { *m = SignedHeadersResult{} }
-func (m *SignedHeadersResult) String() string { return proto.CompactTextString(m) }
-func (*SignedHeadersResult) ProtoMessage()    {}
-func (*SignedHeadersResult) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{1}
-}
-func (m *SignedHeadersResult) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *SignedHeadersResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_SignedHeadersResult.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (dst *SignedHeadersResult) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SignedHeadersResult.Merge(dst, src)
-}
-func (m *SignedHeadersResult) XXX_Size() int {
-	return m.Size()
-}
-func (m *SignedHeadersResult) XXX_DiscardUnknown() {
-	xxx_messageInfo_SignedHeadersResult.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_SignedHeadersResult proto.InternalMessageInfo
-
-func (m *SignedHeadersResult) GetTxExecutions() []*TxExecution {
-	if m != nil {
-		return m.TxExecutions
-	}
-	return nil
-}
-
-func (*SignedHeadersResult) XXX_MessageName() string {
-	return "rpcquery.SignedHeadersResult"
-}
-
 type StatusParam struct {
 	BlockTimeWithin      string   `protobuf:"bytes,1,opt,name=BlockTimeWithin,proto3" json:"BlockTimeWithin,omitempty"`
 	BlockSeenTimeWithin  string   `protobuf:"bytes,2,opt,name=BlockSeenTimeWithin,proto3" json:"BlockSeenTimeWithin,omitempty"`
@@ -158,7 +49,7 @@ func (m *StatusParam) Reset()         { *m = StatusParam{} }
 func (m *StatusParam) String() string { return proto.CompactTextString(m) }
 func (*StatusParam) ProtoMessage()    {}
 func (*StatusParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{2}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{0}
 }
 func (m *StatusParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -216,7 +107,7 @@ func (m *GetAccountParam) Reset()         { *m = GetAccountParam{} }
 func (m *GetAccountParam) String() string { return proto.CompactTextString(m) }
 func (*GetAccountParam) ProtoMessage()    {}
 func (*GetAccountParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{3}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{1}
 }
 func (m *GetAccountParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -261,7 +152,7 @@ func (m *GetStorageParam) Reset()         { *m = GetStorageParam{} }
 func (m *GetStorageParam) String() string { return proto.CompactTextString(m) }
 func (*GetStorageParam) ProtoMessage()    {}
 func (*GetStorageParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{4}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{2}
 }
 func (m *GetStorageParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -305,7 +196,7 @@ func (m *StorageValue) Reset()         { *m = StorageValue{} }
 func (m *StorageValue) String() string { return proto.CompactTextString(m) }
 func (*StorageValue) ProtoMessage()    {}
 func (*StorageValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{5}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{3}
 }
 func (m *StorageValue) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -350,7 +241,7 @@ func (m *AccountProofs) Reset()         { *m = AccountProofs{} }
 func (m *AccountProofs) String() string { return proto.CompactTextString(m) }
 func (*AccountProofs) ProtoMessage()    {}
 func (*AccountProofs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{6}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{4}
 }
 func (m *AccountProofs) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -394,7 +285,7 @@ func (m *ListAccountsParam) Reset()         { *m = ListAccountsParam{} }
 func (m *ListAccountsParam) String() string { return proto.CompactTextString(m) }
 func (*ListAccountsParam) ProtoMessage()    {}
 func (*ListAccountsParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{7}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{5}
 }
 func (m *ListAccountsParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -445,7 +336,7 @@ func (m *GetNameParam) Reset()         { *m = GetNameParam{} }
 func (m *GetNameParam) String() string { return proto.CompactTextString(m) }
 func (*GetNameParam) ProtoMessage()    {}
 func (*GetNameParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{8}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{6}
 }
 func (m *GetNameParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -496,7 +387,7 @@ func (m *ListNamesParam) Reset()         { *m = ListNamesParam{} }
 func (m *ListNamesParam) String() string { return proto.CompactTextString(m) }
 func (*ListNamesParam) ProtoMessage()    {}
 func (*ListNamesParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{9}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{7}
 }
 func (m *ListNamesParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -546,7 +437,7 @@ func (m *GetValidatorSetParam) Reset()         { *m = GetValidatorSetParam{} }
 func (m *GetValidatorSetParam) String() string { return proto.CompactTextString(m) }
 func (*GetValidatorSetParam) ProtoMessage()    {}
 func (*GetValidatorSetParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{10}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{8}
 }
 func (m *GetValidatorSetParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -591,7 +482,7 @@ func (m *GetValidatorSetHistoryParam) Reset()         { *m = GetValidatorSetHist
 func (m *GetValidatorSetHistoryParam) String() string { return proto.CompactTextString(m) }
 func (*GetValidatorSetHistoryParam) ProtoMessage()    {}
 func (*GetValidatorSetHistoryParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{11}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{9}
 }
 func (m *GetValidatorSetHistoryParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -642,7 +533,7 @@ func (m *ValidatorSetHistory) Reset()         { *m = ValidatorSetHistory{} }
 func (m *ValidatorSetHistory) String() string { return proto.CompactTextString(m) }
 func (*ValidatorSetHistory) ProtoMessage()    {}
 func (*ValidatorSetHistory) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{12}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{10}
 }
 func (m *ValidatorSetHistory) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -694,7 +585,7 @@ func (m *ValidatorSet) Reset()         { *m = ValidatorSet{} }
 func (m *ValidatorSet) String() string { return proto.CompactTextString(m) }
 func (*ValidatorSet) ProtoMessage()    {}
 func (*ValidatorSet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{13}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{11}
 }
 func (m *ValidatorSet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -752,7 +643,7 @@ func (m *GetProposalParam) Reset()         { *m = GetProposalParam{} }
 func (m *GetProposalParam) String() string { return proto.CompactTextString(m) }
 func (*GetProposalParam) ProtoMessage()    {}
 func (*GetProposalParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{14}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{12}
 }
 func (m *GetProposalParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -803,7 +694,7 @@ func (m *ListProposalsParam) Reset()         { *m = ListProposalsParam{} }
 func (m *ListProposalsParam) String() string { return proto.CompactTextString(m) }
 func (*ListProposalsParam) ProtoMessage()    {}
 func (*ListProposalsParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{15}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{13}
 }
 func (m *ListProposalsParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -855,7 +746,7 @@ func (m *ProposalResult) Reset()         { *m = ProposalResult{} }
 func (m *ProposalResult) String() string { return proto.CompactTextString(m) }
 func (*ProposalResult) ProtoMessage()    {}
 func (*ProposalResult) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{16}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{14}
 }
 func (m *ProposalResult) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -912,7 +803,7 @@ func (m *GetStatsParam) Reset()         { *m = GetStatsParam{} }
 func (m *GetStatsParam) String() string { return proto.CompactTextString(m) }
 func (*GetStatsParam) ProtoMessage()    {}
 func (*GetStatsParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{17}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{15}
 }
 func (m *GetStatsParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -957,7 +848,7 @@ func (m *Stats) Reset()         { *m = Stats{} }
 func (m *Stats) String() string { return proto.CompactTextString(m) }
 func (*Stats) ProtoMessage()    {}
 func (*Stats) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{18}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{16}
 }
 func (m *Stats) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1015,7 +906,7 @@ func (m *GetBlockParam) Reset()         { *m = GetBlockParam{} }
 func (m *GetBlockParam) String() string { return proto.CompactTextString(m) }
 func (*GetBlockParam) ProtoMessage()    {}
 func (*GetBlockParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_rpcquery_0468d89a151df8d8, []int{19}
+	return fileDescriptor_rpcquery_b3ad17be320a180d, []int{17}
 }
 func (m *GetBlockParam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1055,10 +946,6 @@ func (*GetBlockParam) XXX_MessageName() string {
 	return "rpcquery.GetBlockParam"
 }
 func init() {
-	proto.RegisterType((*TxExecution)(nil), "rpcquery.TxExecution")
-	golang_proto.RegisterType((*TxExecution)(nil), "rpcquery.TxExecution")
-	proto.RegisterType((*SignedHeadersResult)(nil), "rpcquery.SignedHeadersResult")
-	golang_proto.RegisterType((*SignedHeadersResult)(nil), "rpcquery.SignedHeadersResult")
 	proto.RegisterType((*StatusParam)(nil), "rpcquery.StatusParam")
 	golang_proto.RegisterType((*StatusParam)(nil), "rpcquery.StatusParam")
 	proto.RegisterType((*GetAccountParam)(nil), "rpcquery.GetAccountParam")
@@ -1121,7 +1008,6 @@ type QueryClient interface {
 	GetProposal(ctx context.Context, in *GetProposalParam, opts ...grpc.CallOption) (*payload.Ballot, error)
 	ListProposals(ctx context.Context, in *ListProposalsParam, opts ...grpc.CallOption) (Query_ListProposalsClient, error)
 	GetStats(ctx context.Context, in *GetStatsParam, opts ...grpc.CallOption) (*Stats, error)
-	ListSignedHeaders(ctx context.Context, in *rpcevents.BlocksRequest, opts ...grpc.CallOption) (Query_ListSignedHeadersClient, error)
 }
 
 type queryClient struct {
@@ -1309,38 +1195,6 @@ func (c *queryClient) GetStats(ctx context.Context, in *GetStatsParam, opts ...g
 	return out, nil
 }
 
-func (c *queryClient) ListSignedHeaders(ctx context.Context, in *rpcevents.BlocksRequest, opts ...grpc.CallOption) (Query_ListSignedHeadersClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Query_serviceDesc.Streams[3], "/rpcquery.Query/ListSignedHeaders", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &queryListSignedHeadersClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type Query_ListSignedHeadersClient interface {
-	Recv() (*SignedHeadersResult, error)
-	grpc.ClientStream
-}
-
-type queryListSignedHeadersClient struct {
-	grpc.ClientStream
-}
-
-func (x *queryListSignedHeadersClient) Recv() (*SignedHeadersResult, error) {
-	m := new(SignedHeadersResult)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	Status(context.Context, *StatusParam) (*rpc.ResultStatus, error)
@@ -1355,7 +1209,6 @@ type QueryServer interface {
 	GetProposal(context.Context, *GetProposalParam) (*payload.Ballot, error)
 	ListProposals(*ListProposalsParam, Query_ListProposalsServer) error
 	GetStats(context.Context, *GetStatsParam) (*Stats, error)
-	ListSignedHeaders(*rpcevents.BlocksRequest, Query_ListSignedHeadersServer) error
 }
 
 func RegisterQueryServer(s *grpc.Server, srv QueryServer) {
@@ -1587,27 +1440,6 @@ func _Query_GetStats_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ListSignedHeaders_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(rpcevents.BlocksRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(QueryServer).ListSignedHeaders(m, &queryListSignedHeadersServer{stream})
-}
-
-type Query_ListSignedHeadersServer interface {
-	Send(*SignedHeadersResult) error
-	grpc.ServerStream
-}
-
-type queryListSignedHeadersServer struct {
-	grpc.ServerStream
-}
-
-func (x *queryListSignedHeadersServer) Send(m *SignedHeadersResult) error {
-	return x.ServerStream.SendMsg(m)
-}
-
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "rpcquery.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1665,107 +1497,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:       _Query_ListProposals_Handler,
 			ServerStreams: true,
 		},
-		{
-			StreamName:    "ListSignedHeaders",
-			Handler:       _Query_ListSignedHeaders_Handler,
-			ServerStreams: true,
-		},
 	},
 	Metadata: "rpcquery.proto",
-}
-
-func (m *TxExecution) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *TxExecution) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	dAtA[i] = 0xa
-	i++
-	i = encodeVarintRpcquery(dAtA, i, uint64(m.TxHash.Size()))
-	n1, err := m.TxHash.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n1
-	if len(m.LogData) > 0 {
-		for _, msg := range m.LogData {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintRpcquery(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	if m.Exception != nil {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintRpcquery(dAtA, i, uint64(m.Exception.Size()))
-		n2, err := m.Exception.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n2
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	return i, nil
-}
-
-func (m *SignedHeadersResult) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *SignedHeadersResult) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.SignedHeader != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintRpcquery(dAtA, i, uint64(m.SignedHeader.Size()))
-		n3, err := m.SignedHeader.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n3
-	}
-	if len(m.TxExecutions) > 0 {
-		for _, msg := range m.TxExecutions {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintRpcquery(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	return i, nil
 }
 
 func (m *StatusParam) Marshal() (dAtA []byte, err error) {
@@ -1819,11 +1552,11 @@ func (m *GetAccountParam) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintRpcquery(dAtA, i, uint64(m.Address.Size()))
-	n4, err := m.Address.MarshalTo(dAtA[i:])
+	n1, err := m.Address.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n4
+	i += n1
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
@@ -1848,19 +1581,19 @@ func (m *GetStorageParam) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintRpcquery(dAtA, i, uint64(m.Address.Size()))
-	n5, err := m.Address.MarshalTo(dAtA[i:])
+	n2, err := m.Address.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n5
+	i += n2
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintRpcquery(dAtA, i, uint64(m.Key.Size()))
-	n6, err := m.Key.MarshalTo(dAtA[i:])
+	n3, err := m.Key.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n6
+	i += n3
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
@@ -1885,11 +1618,11 @@ func (m *StorageValue) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintRpcquery(dAtA, i, uint64(m.Value.Size()))
-	n7, err := m.Value.MarshalTo(dAtA[i:])
+	n4, err := m.Value.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n7
+	i += n4
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
@@ -1914,19 +1647,19 @@ func (m *AccountProofs) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintRpcquery(dAtA, i, uint64(m.AccountProof.Size()))
-	n8, err := m.AccountProof.MarshalTo(dAtA[i:])
+	n5, err := m.AccountProof.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n8
+	i += n5
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintRpcquery(dAtA, i, uint64(m.StorageProof.Size()))
-	n9, err := m.StorageProof.MarshalTo(dAtA[i:])
+	n6, err := m.StorageProof.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n9
+	i += n6
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
@@ -2215,11 +1948,11 @@ func (m *ProposalResult) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintRpcquery(dAtA, i, uint64(m.Ballot.Size()))
-		n10, err := m.Ballot.MarshalTo(dAtA[i:])
+		n7, err := m.Ballot.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n10
+		i += n7
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -2314,52 +2047,6 @@ func encodeVarintRpcquery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *TxExecution) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.TxHash.Size()
-	n += 1 + l + sovRpcquery(uint64(l))
-	if len(m.LogData) > 0 {
-		for _, e := range m.LogData {
-			l = e.Size()
-			n += 1 + l + sovRpcquery(uint64(l))
-		}
-	}
-	if m.Exception != nil {
-		l = m.Exception.Size()
-		n += 1 + l + sovRpcquery(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
-}
-
-func (m *SignedHeadersResult) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.SignedHeader != nil {
-		l = m.SignedHeader.Size()
-		n += 1 + l + sovRpcquery(uint64(l))
-	}
-	if len(m.TxExecutions) > 0 {
-		for _, e := range m.TxExecutions {
-			l = e.Size()
-			n += 1 + l + sovRpcquery(uint64(l))
-		}
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
-}
-
 func (m *StatusParam) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2662,266 +2349,6 @@ func sovRpcquery(x uint64) (n int) {
 }
 func sozRpcquery(x uint64) (n int) {
 	return sovRpcquery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *TxExecution) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowRpcquery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: TxExecution: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TxExecution: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TxHash", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRpcquery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthRpcquery
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.TxHash.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LogData", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRpcquery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthRpcquery
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			var v github_com_hyperledger_burrow_binary.HexBytes
-			m.LogData = append(m.LogData, v)
-			if err := m.LogData[len(m.LogData)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Exception", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRpcquery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthRpcquery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Exception == nil {
-				m.Exception = &errors.Exception{}
-			}
-			if err := m.Exception.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipRpcquery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthRpcquery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SignedHeadersResult) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowRpcquery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SignedHeadersResult: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SignedHeadersResult: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SignedHeader", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRpcquery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthRpcquery
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			var v github_com_tendermint_tendermint_types.SignedHeader
-			m.SignedHeader = &v
-			if err := m.SignedHeader.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TxExecutions", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowRpcquery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthRpcquery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TxExecutions = append(m.TxExecutions, &TxExecution{})
-			if err := m.TxExecutions[len(m.TxExecutions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipRpcquery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthRpcquery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *StatusParam) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -4543,76 +3970,65 @@ var (
 	ErrIntOverflowRpcquery   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("rpcquery.proto", fileDescriptor_rpcquery_0468d89a151df8d8) }
-func init() { golang_proto.RegisterFile("rpcquery.proto", fileDescriptor_rpcquery_0468d89a151df8d8) }
+func init() { proto.RegisterFile("rpcquery.proto", fileDescriptor_rpcquery_b3ad17be320a180d) }
+func init() { golang_proto.RegisterFile("rpcquery.proto", fileDescriptor_rpcquery_b3ad17be320a180d) }
 
-var fileDescriptor_rpcquery_0468d89a151df8d8 = []byte{
-	// 1067 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x51, 0x6f, 0x1b, 0x45,
-	0x10, 0xe6, 0x92, 0xc6, 0x49, 0xc6, 0x97, 0xb8, 0xd9, 0x04, 0x37, 0x5c, 0xc1, 0x89, 0x4e, 0x22,
-	0x0d, 0x15, 0x9c, 0x2d, 0xb7, 0x01, 0x01, 0x0f, 0xd0, 0x40, 0xea, 0x04, 0xda, 0x50, 0xce, 0x51,
-	0x2a, 0x15, 0x09, 0x69, 0x73, 0xb7, 0xb5, 0x4f, 0xd8, 0xb7, 0xd7, 0xbd, 0xbd, 0x90, 0xfb, 0x49,
-	0x3c, 0xf0, 0x1b, 0xe0, 0x31, 0x8f, 0x3c, 0xa2, 0x3e, 0x44, 0x28, 0xfd, 0x23, 0xe8, 0xf6, 0x76,
-	0xed, 0x5d, 0xc7, 0x0d, 0x50, 0x89, 0xb7, 0x9d, 0xd9, 0x99, 0x6f, 0x76, 0x67, 0xe7, 0xfb, 0xee,
-	0x60, 0x99, 0x25, 0xc1, 0x8b, 0x8c, 0xb0, 0xdc, 0x4b, 0x18, 0xe5, 0x14, 0x2d, 0x28, 0xdb, 0xf9,
-	0xa8, 0x17, 0xf1, 0x7e, 0x76, 0xe2, 0x05, 0x74, 0xd8, 0xec, 0xd1, 0x1e, 0x6d, 0x8a, 0x80, 0x93,
-	0xec, 0xb9, 0xb0, 0x84, 0x21, 0x56, 0x65, 0xa2, 0x53, 0x8d, 0xf1, 0x90, 0xa4, 0xd2, 0x58, 0xc4,
-	0xc1, 0x50, 0x2e, 0x6b, 0xa7, 0x78, 0x10, 0x85, 0x98, 0x53, 0xa6, 0xf6, 0x58, 0x12, 0xc8, 0xe5,
-	0x52, 0x82, 0xf3, 0x01, 0xc5, 0xa1, 0x0a, 0x65, 0x49, 0x40, 0x4e, 0x49, 0xcc, 0x15, 0x8c, 0x4d,
-	0x18, 0xa3, 0x4c, 0x5a, 0xee, 0x85, 0x05, 0xd5, 0xa3, 0xb3, 0xbd, 0x33, 0x12, 0x64, 0x3c, 0xa2,
-	0x31, 0x7a, 0x0c, 0x95, 0xa3, 0xb3, 0x7d, 0x9c, 0xf6, 0xd7, 0xad, 0x4d, 0x6b, 0xdb, 0xde, 0xdd,
-	0x39, 0xbf, 0xd8, 0x78, 0xeb, 0xe5, 0xc5, 0x86, 0x7e, 0xf0, 0x7e, 0x9e, 0x10, 0x36, 0x20, 0x61,
-	0x8f, 0xb0, 0xe6, 0x49, 0xc6, 0x18, 0xfd, 0xb9, 0x79, 0x12, 0xc5, 0x98, 0xe5, 0xde, 0x3e, 0x39,
-	0xdb, 0xcd, 0x39, 0x49, 0x7d, 0x09, 0x82, 0xbe, 0x83, 0xf9, 0x47, 0xb4, 0xf7, 0x35, 0xe6, 0x78,
-	0x7d, 0x66, 0x73, 0xf6, 0xcd, 0xf1, 0x14, 0x0a, 0x6a, 0xc2, 0xe2, 0xde, 0x59, 0x40, 0x92, 0xe2,
-	0xb0, 0xeb, 0xb3, 0x9b, 0xd6, 0x76, 0xb5, 0xbd, 0xe2, 0xc9, 0x1b, 0x8d, 0x36, 0xfc, 0x71, 0x8c,
-	0xfb, 0xab, 0x05, 0xab, 0xdd, 0xa8, 0x17, 0x93, 0x70, 0x9f, 0xe0, 0x90, 0xb0, 0xd4, 0x27, 0x69,
-	0x36, 0xe0, 0xe8, 0x07, 0xb0, 0x75, 0xb7, 0xbc, 0xee, 0x27, 0x2f, 0x2f, 0x36, 0xee, 0x69, 0x47,
-	0xe3, 0x24, 0x0e, 0x09, 0x1b, 0x46, 0x31, 0x37, 0x96, 0x79, 0x42, 0x52, 0x4f, 0x4f, 0xf7, 0x0d,
-	0x30, 0xf4, 0x29, 0xd8, 0x5a, 0x53, 0x53, 0x71, 0xf7, 0x6a, 0xfb, 0x6d, 0x6f, 0x34, 0x17, 0xda,
-	0xae, 0x6f, 0x84, 0xba, 0x11, 0x54, 0xbb, 0x1c, 0xf3, 0x2c, 0x7d, 0x82, 0x19, 0x1e, 0xa2, 0x6d,
-	0xa8, 0xed, 0x0e, 0x68, 0xf0, 0xd3, 0x51, 0x34, 0x24, 0x4f, 0x23, 0xde, 0x8f, 0x62, 0x71, 0xd2,
-	0x45, 0x7f, 0xd2, 0x8d, 0x5a, 0xb0, 0x2a, 0x5c, 0x5d, 0x42, 0x62, 0x2d, 0x7a, 0x46, 0x44, 0x4f,
-	0xdb, 0x72, 0x31, 0xd4, 0x3a, 0x84, 0x3f, 0x08, 0x02, 0x9a, 0xc5, 0xbc, 0x2c, 0x77, 0x08, 0xf3,
-	0x0f, 0xc2, 0x90, 0x91, 0x34, 0x95, 0x0d, 0xb9, 0x2f, 0xdf, 0xeb, 0xc3, 0xeb, 0xdf, 0x2b, 0x60,
-	0x79, 0xc2, 0xa9, 0x27, 0x73, 0x7d, 0x05, 0xe2, 0xfe, 0x62, 0x89, 0x1a, 0x5d, 0x4e, 0x19, 0xee,
-	0x91, 0xff, 0xa5, 0x06, 0x7a, 0x08, 0xb3, 0xdf, 0x92, 0x5c, 0x5c, 0xf4, 0x5f, 0x63, 0xc9, 0xf9,
-	0x7a, 0x4a, 0x59, 0xd8, 0xde, 0xf9, 0xd8, 0x2f, 0x00, 0xdc, 0x67, 0x60, 0xcb, 0x73, 0x1e, 0xe3,
-	0x41, 0x46, 0xd0, 0x37, 0x30, 0x27, 0x16, 0xff, 0xed, 0x94, 0x13, 0xc8, 0x25, 0x84, 0xfb, 0x9b,
-	0x05, 0x4b, 0xaa, 0xd1, 0x8c, 0xd2, 0xe7, 0x29, 0x3a, 0x06, 0x5b, 0x77, 0xc8, 0x22, 0x6d, 0x59,
-	0xe4, 0xee, 0xf5, 0x45, 0x12, 0x81, 0xe1, 0x89, 0x4c, 0xdf, 0xc0, 0x29, 0x70, 0x55, 0xb7, 0x05,
-	0xee, 0xcc, 0x9b, 0xe3, 0xea, 0x38, 0xee, 0x07, 0xb0, 0xf2, 0x28, 0x4a, 0xd5, 0xb4, 0xc8, 0xe9,
-	0x5c, 0x83, 0xb9, 0xef, 0x8b, 0x79, 0x96, 0x33, 0x59, 0x1a, 0xae, 0x0b, 0x76, 0x87, 0xf0, 0x43,
-	0x3c, 0x94, 0x0f, 0x8e, 0xe0, 0x46, 0x61, 0xc8, 0x20, 0xb1, 0x76, 0xb7, 0x60, 0xb9, 0x80, 0x2b,
-	0xd6, 0xd7, 0x62, 0xd5, 0x61, 0xad, 0x43, 0xf8, 0xb1, 0x92, 0xbb, 0x2e, 0x29, 0x07, 0xd5, 0xed,
-	0xc0, 0xed, 0x09, 0xff, 0x7e, 0x94, 0x72, 0xca, 0xf2, 0x11, 0x6d, 0x0e, 0xe2, 0x60, 0x90, 0x85,
-	0xe4, 0x09, 0x23, 0xa7, 0x11, 0xcd, 0xca, 0x59, 0x9b, 0xf5, 0x27, 0xdd, 0x6e, 0x07, 0x56, 0xa7,
-	0xa0, 0xa0, 0x16, 0xcc, 0xcb, 0xe5, 0xba, 0x25, 0xc8, 0x5b, 0x1f, 0x93, 0x57, 0x8f, 0xf7, 0x55,
-	0x98, 0x7b, 0x08, 0xb6, 0xbe, 0x81, 0xea, 0x50, 0xe9, 0x93, 0xa8, 0xd7, 0xe7, 0xa2, 0xf2, 0x0d,
-	0x5f, 0x5a, 0x68, 0x0b, 0x66, 0xbb, 0x84, 0x4b, 0x49, 0x58, 0xf3, 0xc6, 0x4a, 0x3e, 0xca, 0xf6,
-	0x8b, 0x00, 0x77, 0x0b, 0x6e, 0x76, 0x48, 0xf1, 0xa8, 0x09, 0x4d, 0xf1, 0x60, 0xd4, 0xc9, 0xb1,
-	0x36, 0xfb, 0x62, 0xed, 0xb6, 0x00, 0x15, 0x9d, 0x54, 0x81, 0xb2, 0x9b, 0x0e, 0x2c, 0x94, 0x1e,
-	0x12, 0x8a, 0xe8, 0x05, 0x7f, 0x64, 0xbb, 0x8f, 0x61, 0x59, 0x45, 0x4b, 0x31, 0x9c, 0x82, 0x8b,
-	0xee, 0x40, 0x65, 0x17, 0x0f, 0x06, 0x94, 0x8b, 0x11, 0xaa, 0xb6, 0x6b, 0x9e, 0xfa, 0xb0, 0x94,
-	0x6e, 0x5f, 0x6e, 0xbb, 0x35, 0x58, 0x12, 0x14, 0xc7, 0x72, 0x2a, 0x5c, 0x02, 0x73, 0xc2, 0x42,
-	0x77, 0xe1, 0xa6, 0x9a, 0x97, 0x42, 0x72, 0xbe, 0xa2, 0x21, 0x91, 0xcd, 0xb8, 0xe2, 0x2f, 0xe4,
-	0x4b, 0xf7, 0xd1, 0x8c, 0x8b, 0xf0, 0x19, 0x11, 0x3e, 0x6d, 0xcb, 0xbd, 0x23, 0xea, 0x0a, 0x61,
-	0x2b, 0xef, 0x5c, 0x87, 0xca, 0xbe, 0xd1, 0xf1, 0xd2, 0x6a, 0xff, 0x59, 0x91, 0xa3, 0x85, 0xda,
-	0x50, 0x29, 0xc5, 0x15, 0x69, 0x5a, 0xac, 0xc9, 0xad, 0xb3, 0x52, 0xb8, 0xbd, 0xb2, 0x2b, 0x32,
-	0x72, 0x07, 0x60, 0xac, 0x92, 0xe8, 0x9d, 0x71, 0xde, 0x84, 0x76, 0x3a, 0xb6, 0x57, 0x7c, 0xa0,
-	0x55, 0xe0, 0x17, 0x22, 0x4d, 0x52, 0x68, 0x22, 0x4d, 0x97, 0x43, 0xa7, 0xae, 0x9f, 0x44, 0x93,
-	0x9f, 0x87, 0xe2, 0xfd, 0x4d, 0xd1, 0xb8, 0xa6, 0xfa, 0xad, 0xf1, 0x96, 0x99, 0xf3, 0x39, 0xd8,
-	0x3a, 0x71, 0xd1, 0xed, 0x71, 0xe0, 0x15, 0x42, 0x9b, 0x77, 0x68, 0x59, 0xa8, 0x09, 0xf3, 0x92,
-	0xca, 0xa8, 0x6e, 0xd4, 0x1e, 0xb1, 0xdb, 0xb1, 0xbd, 0xf2, 0x27, 0x65, 0x2f, 0xe6, 0x2c, 0x47,
-	0x3b, 0xb0, 0x38, 0xe2, 0x35, 0x5a, 0x37, 0x4b, 0x8d, 0xc9, 0x6e, 0x26, 0xb5, 0x2c, 0x74, 0x20,
-	0x3e, 0x13, 0x06, 0x7f, 0x1a, 0x46, 0xbd, 0x2b, 0x0a, 0xe0, 0xbc, 0x86, 0x90, 0xe8, 0x47, 0xa8,
-	0x4f, 0x57, 0x06, 0xf4, 0xfe, 0x6b, 0x11, 0x75, 0xed, 0x70, 0xde, 0x9b, 0x0e, 0xac, 0x50, 0x3e,
-	0x83, 0xaa, 0xc6, 0x4b, 0xe4, 0x18, 0xa0, 0x06, 0x5d, 0x9d, 0x49, 0xca, 0xa0, 0x03, 0x58, 0x32,
-	0xb8, 0x8a, 0xde, 0x35, 0x3b, 0x64, 0x92, 0xd8, 0xd1, 0xfa, 0x67, 0x12, 0xb6, 0x65, 0xa1, 0xfb,
-	0xb0, 0xa0, 0x58, 0x87, 0x6e, 0x4d, 0x4c, 0x97, 0x62, 0xa2, 0x53, 0x33, 0xa7, 0x3c, 0x45, 0x87,
-	0xa5, 0x8a, 0x1b, 0x3f, 0x44, 0xe5, 0x33, 0xc9, 0x7f, 0x44, 0x41, 0xa7, 0xd4, 0x27, 0x2f, 0x32,
-	0x92, 0x72, 0xbd, 0x15, 0x53, 0xfe, 0xa1, 0x5a, 0xd6, 0xee, 0x97, 0xe7, 0x97, 0x0d, 0xeb, 0x8f,
-	0xcb, 0x86, 0xf5, 0xd7, 0x65, 0xc3, 0xfa, 0xfd, 0x55, 0xc3, 0x3a, 0x7f, 0xd5, 0xb0, 0x9e, 0xfd,
-	0xc3, 0x57, 0x86, 0x25, 0x41, 0x53, 0xe1, 0x9e, 0x54, 0xc4, 0x7f, 0xe8, 0xbd, 0xbf, 0x03, 0x00,
-	0x00, 0xff, 0xff, 0x4d, 0xa4, 0x72, 0xeb, 0x34, 0x0b, 0x00, 0x00,
+var fileDescriptor_rpcquery_b3ad17be320a180d = []byte{
+	// 887 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcd, 0x6e, 0xdb, 0x46,
+	0x10, 0x2e, 0xad, 0x58, 0x96, 0x47, 0x94, 0x95, 0x6c, 0x5c, 0x45, 0x65, 0x5a, 0x25, 0x58, 0xa0,
+	0x8e, 0x1b, 0xb4, 0x94, 0xa0, 0xc6, 0x3d, 0xb4, 0x87, 0x36, 0x2a, 0x1a, 0xd9, 0xfd, 0x31, 0x52,
+	0xaa, 0x70, 0x80, 0x1c, 0x0a, 0xac, 0xc8, 0x8d, 0x44, 0x94, 0xd2, 0xb2, 0xcb, 0x65, 0x0a, 0xbe,
+	0x41, 0x5f, 0xa5, 0x4f, 0xd1, 0x1e, 0x7d, 0xec, 0xb9, 0x87, 0xa0, 0x70, 0x5e, 0xa4, 0xe0, 0x72,
+	0x57, 0xe2, 0xd2, 0xb2, 0xfb, 0x03, 0xf4, 0x36, 0x33, 0x3b, 0xf3, 0x0d, 0x39, 0x3b, 0xdf, 0x47,
+	0xc2, 0x1e, 0x8f, 0xfd, 0x1f, 0x53, 0xca, 0x33, 0x37, 0xe6, 0x4c, 0x30, 0xd4, 0xd0, 0xbe, 0xf3,
+	0xc1, 0x2c, 0x14, 0xf3, 0x74, 0xea, 0xfa, 0x6c, 0xd1, 0x9f, 0xb1, 0x19, 0xeb, 0xcb, 0x84, 0x69,
+	0xfa, 0x42, 0x7a, 0xd2, 0x91, 0x56, 0x51, 0xe8, 0x34, 0x97, 0x64, 0x41, 0x13, 0xe5, 0xec, 0x12,
+	0x7f, 0xa1, 0xcc, 0xf6, 0x4b, 0x12, 0x85, 0x01, 0x11, 0x8c, 0xeb, 0x33, 0x1e, 0xfb, 0xca, 0x6c,
+	0xc5, 0x24, 0x8b, 0x18, 0x09, 0x0a, 0x17, 0x87, 0xd0, 0x9c, 0x08, 0x22, 0xd2, 0xe4, 0x29, 0xe1,
+	0x64, 0x81, 0x0e, 0xa1, 0x3d, 0x8a, 0x98, 0xff, 0xc3, 0x77, 0xe1, 0x82, 0x3e, 0x0b, 0xc5, 0x3c,
+	0x5c, 0x76, 0xad, 0xfb, 0xd6, 0xe1, 0xae, 0x57, 0x0d, 0xa3, 0x01, 0xdc, 0x96, 0xa1, 0x09, 0xa5,
+	0xcb, 0x52, 0xf6, 0x96, 0xcc, 0xde, 0x74, 0x84, 0x09, 0xb4, 0xc7, 0x54, 0x3c, 0xf6, 0x7d, 0x96,
+	0x2e, 0x45, 0xd1, 0xee, 0x14, 0x76, 0x1e, 0x07, 0x01, 0xa7, 0x49, 0x22, 0xdb, 0xd8, 0xa3, 0x47,
+	0xe7, 0xaf, 0xee, 0xbd, 0xf1, 0xc7, 0xab, 0x7b, 0xef, 0x97, 0x06, 0x31, 0xcf, 0x62, 0xca, 0x23,
+	0x1a, 0xcc, 0x28, 0xef, 0x4f, 0x53, 0xce, 0xd9, 0x4f, 0x7d, 0x9f, 0x67, 0xb1, 0x60, 0xae, 0xaa,
+	0xf5, 0x34, 0x08, 0xfe, 0xc5, 0x92, 0x3d, 0x26, 0x82, 0x71, 0x32, 0xa3, 0xff, 0x4b, 0x0f, 0xf4,
+	0x04, 0x6a, 0x5f, 0xd1, 0x4c, 0xbe, 0xe8, 0x3f, 0xc6, 0x9a, 0x86, 0x4b, 0xc2, 0x33, 0xf7, 0x19,
+	0xe3, 0xc1, 0xf0, 0xe8, 0x23, 0x2f, 0x07, 0xc0, 0xcf, 0xc1, 0x56, 0xcf, 0x79, 0x46, 0xa2, 0x94,
+	0xa2, 0x2f, 0x61, 0x5b, 0x1a, 0xff, 0xee, 0x29, 0x2b, 0xc8, 0x05, 0x04, 0xfe, 0xd5, 0x82, 0x96,
+	0x1e, 0x34, 0x67, 0xec, 0x45, 0x82, 0xce, 0xc0, 0x2e, 0x07, 0x54, 0x93, 0xa1, 0x6a, 0xf2, 0xf0,
+	0xfa, 0x26, 0xb1, 0xc4, 0x70, 0x65, 0xa5, 0x67, 0xe0, 0xe4, 0xb8, 0x7a, 0xda, 0x12, 0x77, 0xeb,
+	0xbf, 0xe3, 0x96, 0x71, 0xf0, 0x7b, 0x70, 0xeb, 0xeb, 0x30, 0xd1, 0xdb, 0xa2, 0xb6, 0x73, 0x1f,
+	0xb6, 0xbf, 0xcd, 0x79, 0xa2, 0x76, 0xb2, 0x70, 0x30, 0x06, 0x7b, 0x4c, 0xc5, 0x29, 0x59, 0xa8,
+	0x0b, 0x47, 0x70, 0x23, 0x77, 0x54, 0x92, 0xb4, 0xf1, 0x01, 0xec, 0xe5, 0x70, 0xb9, 0x7d, 0x2d,
+	0x56, 0x07, 0xf6, 0xc7, 0x54, 0x9c, 0x69, 0xfa, 0x4c, 0x68, 0xb1, 0xa8, 0x78, 0x0c, 0x77, 0x2b,
+	0xf1, 0xe3, 0x30, 0x11, 0x8c, 0x67, 0x2b, 0xda, 0x9c, 0x2c, 0xfd, 0x28, 0x0d, 0xe8, 0x53, 0x4e,
+	0x5f, 0x86, 0x2c, 0x2d, 0x76, 0xad, 0xe6, 0x55, 0xc3, 0x78, 0x0c, 0xb7, 0x37, 0xa0, 0xa0, 0x01,
+	0xec, 0x28, 0xb3, 0x6b, 0xdd, 0xaf, 0x1d, 0x36, 0x87, 0x1d, 0x77, 0x25, 0x12, 0xe5, 0x7c, 0x4f,
+	0xa7, 0xe1, 0x53, 0xb0, 0xcb, 0x07, 0xa8, 0x03, 0xf5, 0x39, 0x0d, 0x67, 0x73, 0x21, 0x3b, 0xdf,
+	0xf0, 0x94, 0x87, 0x0e, 0xa0, 0x36, 0xa1, 0xa2, 0xbb, 0x25, 0x51, 0xf7, 0xdd, 0xb5, 0x32, 0xac,
+	0xaa, 0xbd, 0x3c, 0x01, 0x1f, 0xc0, 0xcd, 0x31, 0xcd, 0x2f, 0x35, 0x66, 0x09, 0x89, 0x56, 0x93,
+	0x3c, 0x26, 0xc9, 0xbc, 0x58, 0x16, 0x4f, 0xda, 0x78, 0x00, 0x28, 0x9f, 0xa4, 0x4e, 0x54, 0xd3,
+	0x74, 0xa0, 0x51, 0x44, 0x68, 0x20, 0xb3, 0x1b, 0xde, 0xca, 0xc7, 0xdf, 0xc0, 0x9e, 0xce, 0xf6,
+	0x68, 0x92, 0x46, 0x62, 0x13, 0x2e, 0x7a, 0x00, 0xf5, 0x11, 0x89, 0x22, 0x26, 0xe4, 0x0a, 0x35,
+	0x87, 0x6d, 0x57, 0x0b, 0x55, 0x11, 0xf6, 0xd4, 0x31, 0x6e, 0x43, 0x4b, 0x52, 0x9c, 0xa8, 0xad,
+	0xc0, 0x14, 0xb6, 0xa5, 0x87, 0x1e, 0xc2, 0x4d, 0xbd, 0x2f, 0xb9, 0xe4, 0x7c, 0xce, 0x02, 0xaa,
+	0x86, 0x71, 0x29, 0x9e, 0xcb, 0x57, 0x39, 0xc6, 0x52, 0x21, 0xd3, 0xb7, 0x64, 0xfa, 0xa6, 0x23,
+	0xfc, 0x40, 0xf6, 0x95, 0xc2, 0x56, 0xbc, 0x73, 0x07, 0xea, 0xc7, 0xc6, 0xc4, 0x0b, 0x6f, 0xf8,
+	0x73, 0x5d, 0xad, 0x16, 0x1a, 0x42, 0xbd, 0x10, 0x57, 0xf4, 0xe6, 0xfa, 0x3a, 0x4b, 0x72, 0xeb,
+	0xdc, 0xca, 0xc3, 0x6e, 0x31, 0x15, 0x95, 0x79, 0x04, 0xb0, 0x56, 0x49, 0xf4, 0xd6, 0xba, 0xae,
+	0xa2, 0x9d, 0x8e, 0xed, 0xe6, 0x82, 0xaf, 0x13, 0x3f, 0x95, 0x65, 0x8a, 0x42, 0x95, 0xb2, 0xb2,
+	0x1c, 0x3a, 0x9d, 0xf2, 0x93, 0x94, 0xe4, 0xe7, 0x89, 0xbc, 0x7f, 0x53, 0x34, 0xae, 0xe9, 0x7e,
+	0x67, 0x7d, 0x64, 0xd6, 0x7c, 0x02, 0x76, 0x99, 0xb8, 0xe8, 0xee, 0x3a, 0xf1, 0x12, 0xa1, 0xcd,
+	0x77, 0x18, 0x58, 0xa8, 0x0f, 0x3b, 0x8a, 0xca, 0xa8, 0x63, 0xf4, 0x5e, 0xb1, 0xdb, 0xb1, 0xdd,
+	0xe2, 0xa3, 0xf7, 0xc5, 0x52, 0xf0, 0x0c, 0x1d, 0xc1, 0xee, 0x8a, 0xd7, 0xa8, 0x6b, 0xb6, 0x5a,
+	0x93, 0xdd, 0x2c, 0x1a, 0x58, 0xe8, 0x44, 0x7e, 0x26, 0x0c, 0xfe, 0xf4, 0x8c, 0x7e, 0x97, 0x14,
+	0xc0, 0xb9, 0x82, 0x90, 0xe8, 0x7b, 0xe8, 0x6c, 0x56, 0x06, 0xf4, 0xee, 0x95, 0x88, 0x65, 0xed,
+	0x70, 0xde, 0xd9, 0x0c, 0xac, 0x51, 0x3e, 0x86, 0x66, 0x89, 0x97, 0xc8, 0x31, 0x40, 0x0d, 0xba,
+	0x3a, 0x55, 0xca, 0xa0, 0x13, 0x68, 0x19, 0x5c, 0x45, 0x6f, 0x9b, 0x13, 0x32, 0x49, 0xec, 0x94,
+	0xe6, 0x67, 0x12, 0x76, 0x60, 0xa1, 0x47, 0xd0, 0xd0, 0xac, 0x43, 0x77, 0x2a, 0xdb, 0xa5, 0x99,
+	0xe8, 0xb4, 0xcd, 0x2d, 0x4f, 0x46, 0x9f, 0x9d, 0x5f, 0xf4, 0xac, 0xdf, 0x2f, 0x7a, 0xd6, 0x9f,
+	0x17, 0x3d, 0xeb, 0xb7, 0xd7, 0x3d, 0xeb, 0xfc, 0x75, 0xcf, 0x7a, 0xfe, 0x37, 0x5f, 0x05, 0x1e,
+	0xfb, 0x7d, 0x8d, 0x33, 0xad, 0xcb, 0xdf, 0x94, 0x0f, 0xff, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x08,
+	0x61, 0xff, 0x75, 0x34, 0x09, 0x00, 0x00,
 }

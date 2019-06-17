@@ -31,7 +31,6 @@ import (
 	"github.com/hyperledger/burrow/crypto"
 	"github.com/hyperledger/burrow/crypto/sha3"
 	"github.com/hyperledger/burrow/execution/errors"
-	"github.com/hyperledger/burrow/execution/evm/abi"
 	. "github.com/hyperledger/burrow/execution/evm/asm"
 	"github.com/hyperledger/burrow/execution/exec"
 	"github.com/hyperledger/burrow/logging"
@@ -220,7 +219,6 @@ func (vm *VM) call(callState Interface, eventSink EventSink, caller, callee cryp
 
 	if callState.GetShardID(callee) != vm.params.ShardID {
 		callState.PushError(errors.ErrorCodef(errors.ErrorCodeExecutionReverted, "call() on moved account"))
-		// return nil, errors.ErrorCodeWrongShardExecution
 	}
 
 	callState.PushError(transfer(callState, caller, callee, value))

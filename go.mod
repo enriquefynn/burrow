@@ -13,6 +13,7 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/elgs/gojq v0.0.0-20160421194050-81fa9a608a13
 	github.com/elgs/gosplitargs v0.0.0-20161028071935-a491c5eeb3c8 // indirect
+	github.com/ethereum/go-ethereum v1.8.27
 	github.com/go-kit/kit v0.8.0
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-ozzo/ozzo-validation v3.5.0+incompatible
@@ -31,7 +32,7 @@ require (
 	github.com/prometheus/client_golang v0.9.2
 	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
-	github.com/rs/cors v1.6.0 // indirect
+	github.com/sirupsen/logrus v1.4.1
 	github.com/spf13/viper v1.3.2
 	github.com/streadway/simpleuuid v0.0.0-20130420165545-6617b501e485
 	github.com/stretchr/testify v1.3.0
@@ -49,3 +50,5 @@ require (
 	google.golang.org/grpc v1.20.1
 	gopkg.in/yaml.v2 v2.2.2
 )
+
+replace github.com/tendermint/tendermint => ../../enriquefynn/tendermint

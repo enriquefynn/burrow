@@ -9,7 +9,6 @@ import (
 
 	"reflect"
 
-	"github.com/sirupsen/logrus"
 	hex "github.com/tmthrgd/go-hex"
 
 	"github.com/hyperledger/burrow/acm"
@@ -34,7 +33,6 @@ import (
 
 type Client struct {
 	MempoolSigning    bool
-	LocalSigning      bool
 	ChainAddress      string
 	KeysClientAddress string
 	// Memoised clients and info
@@ -47,20 +45,12 @@ type Client struct {
 	AllSpecs              *abi.AbiSpec
 }
 
-func NewClient(chainURL, keysClientAddress string, mempoolSigning bool, timeout time.Duration) *Client {
-	client := Client{ChainAddress: chainURL, MempoolSigning: mempoolSigning, KeysClientAddress: keysClientAddress, timeout: timeout, LocalSigning: false}
-	err := client.dial()
-	if err != nil {
-		fmt.Printf("Error dialing: %v", err)
-	}
-	return &client
-}
-
-func NewClientWithLocalSigning(chainURL string, timeout time.Duration, signers []acm.AddressableSigner) *Client {
-	client := Client{ChainAddress: chainURL, LocalSigning: true, signersClient: signers, MempoolSigning: false, timeout: timeout}
-	err := client.dial()
-	if err != nil {
-		fmt.Printf("Error dialing: %v", err)
+func NewClient(chain, keysClientAddress string, mempoolSigning bool, timeout time.Duration) *Client {
+	client := Client{
+		ChainAddress:      chain,
+		MempoolSigning:    mempoolSigning,
+		KeysClientAddress: keysClientAddress,
+		timeout:           timeout,
 	}
 	return &client
 }
@@ -75,10 +65,8 @@ func (c *Client) dial(logger *logging.Logger) error {
 		c.transactClient = rpctransact.NewTransactClient(conn)
 		c.queryClient = rpcquery.NewQueryClient(conn)
 		c.executionEventsClient = rpcevents.NewExecutionEventsClient(conn)
-		if c.LocalSigning {
-			logrus.Info("Using local signing")
-		} else if c.KeysClientAddress == "" {
-			logrus.Info("Using mempool signing since no keyClient set, pass --keys to sign locally or elsewhere")
+		if c.KeysClientAddress == "" {
+			logger.InfoMsg("Using mempool signing since no keyClient set, pass --keys to sign locally or elsewhere")
 			c.MempoolSigning = true
 			c.keyClient, err = keys.NewRemoteKeyClient(c.ChainAddress, logger)
 		} else {
@@ -151,20 +139,6 @@ func (c *Client) GetAccount(address crypto.Address) (*acm.Account, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 	return c.queryClient.GetAccount(ctx, &rpcquery.GetAccountParam{Address: address})
-}
-
-func (c *Client) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	defer cancel()
-	pr, err := c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
-	return proofs.NewShardProof(&pr.AccountProof, &pr.StorageProof), err
-}
-
-func (c *Client) GetAccountProof(address crypto.Address) (*rpcquery.AccountProofs, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	defer cancel()
-	accProof, err := c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
-	return accProof, err
 }
 
 func (c *Client) GetStorage(address crypto.Address, key binary.Word256) (binary.Word256, error) {
@@ -245,13 +219,6 @@ func (c *Client) SignTx(tx payload.Payload, logger *logging.Logger) (*txs.Envelo
 	if c.MempoolSigning {
 		logger.InfoMsg("Using mempool signing")
 		return txEnv, nil
-	} else if c.LocalSigning {
-		logrus.Info("Using local signer")
-		err = txEnv.Sign(c.signersClient...)
-		if err != nil {
-			return nil, err
-		}
-		return txEnv, nil
 	}
 	inputs := tx.GetInputs()
 	signers := make([]acm.AddressableSigner, len(inputs))
@@ -262,15 +229,6 @@ func (c *Client) SignTx(tx payload.Payload, logger *logging.Logger) (*txs.Envelo
 		}
 	}
 	err = txEnv.Sign(signers...)
-	if err != nil {
-		return nil, err
-	}
-	return txEnv, nil
-}
-
-func (c *Client) SignTxOnBehalfOf(tx payload.Payload, signersClient []acm.AddressableSigner) (*txs.Envelope, error) {
-	txEnv := txs.Enclose(c.chainID, tx)
-	err := txEnv.Sign(signersClient...)
 	if err != nil {
 		return nil, err
 	}
@@ -322,15 +280,6 @@ func (c *Client) BroadcastEnvelope(txEnv *txs.Envelope, logger *logging.Logger) 
 	defer cancel()
 
 	return c.transactClient.BroadcastTxSync(ctx, &rpctransact.TxEnvelopeParam{Envelope: txEnv})
-}
-
-// BroadcastEnvelopeAsync Broadcast envelope async - can be locally signed or remote signing will be attempted
-func (c *Client) BroadcastEnvelopeAsync(txEnv *txs.Envelope) (*txs.Receipt, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	// ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
-	defer cancel()
-
-	return c.transactClient.BroadcastTxAsync(ctx, &rpctransact.TxEnvelopeParam{Envelope: txEnv})
 }
 
 // BroadcastEnvelopeAsync Broadcast envelope async - can be locally signed or remote signing will be attempted
@@ -689,6 +638,20 @@ func (c *Client) getSequence(sequence string, inputAddress crypto.Address, mempo
 		return acc.Sequence + 1, nil
 	}
 	return c.ParseUint64(sequence)
+}
+
+func (c *Client) GetAccountWithProof(address crypto.Address) (*proofs.ShardProof, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+	pr, err := c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
+	return proofs.NewShardProof(&pr.AccountProof, &pr.StorageProof), err
+}
+
+func (c *Client) GetAccountProof(address crypto.Address) (*rpcquery.AccountProofs, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+	accProof, err := c.queryClient.GetAccountProofs(ctx, &rpcquery.GetAccountParam{Address: address})
+	return accProof, err
 }
 
 func argMap(value interface{}) map[string]interface{} {
