@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/hyperledger/burrow/bcm"
+	"github.com/hyperledger/burrow/binary"
 	"github.com/hyperledger/burrow/event"
 	"github.com/hyperledger/burrow/event/query"
 	"github.com/hyperledger/burrow/execution/exec"
@@ -80,6 +81,12 @@ func (ees *executionEventsServer) Stream(request *BlocksRequest, stream Executio
 	})
 }
 
+func (ees *executionEventsServer) StreamSignedHeaders(request *BlocksRequest, stream ExecutionEvents_StreamSignedHeadersServer) error {
+	return ees.streamSH(stream.Context(), request.BlockRange, func(sev *SignedHeadersResult) error {
+		return stream.Send(sev)
+	})
+}
+
 func (ees *executionEventsServer) Events(request *BlocksRequest, stream ExecutionEvents_EventsServer) error {
 	qry, err := query.NewOrEmpty(request.Query)
 	if err != nil {
@@ -109,6 +116,52 @@ func (ees *executionEventsServer) Events(request *BlocksRequest, stream Executio
 			}
 		}
 
+		return nil
+	})
+}
+
+func (ees *executionEventsServer) streamSH(ctx context.Context, blockRange *BlockRange,
+	consumer func(execution *SignedHeadersResult) error) error {
+
+	return ees.subscribeBlockExecution(ctx, func(block *exec.BlockExecution) error {
+		for _, blk := range block.StreamEvents() {
+			if blk.EndBlock == nil {
+				continue
+			}
+			var txExecutions []*TxExecution
+			for _, tx := range block.TxExecutions {
+				txExec := &TxExecution{
+					TxHash: tx.TxHash,
+				}
+				var txLogData []binary.HexBytes
+				for _, tlog := range tx.Events {
+					if tlog.Log != nil {
+						txLogData = append(txLogData, tlog.Log.Data)
+					}
+				}
+				txExec.LogData = txLogData
+				if tx.Exception != nil {
+					txExec.Exception = tx.Exception
+				}
+
+				// txExec.Exception = tx.Exception
+
+				txExecutions = append(txExecutions, txExec)
+			}
+			signedHeader, err := ees.tip.GetBlockSignedHeader(block.Height)
+
+			if err != nil {
+				return err
+			}
+			signedHeaderResult := &SignedHeadersResult{
+				SignedHeader: signedHeader,
+				TxExecutions: txExecutions,
+			}
+			err = consumer(signedHeaderResult)
+			if err != nil {
+				return err
+			}
+		}
 		return nil
 	})
 }
